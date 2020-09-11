@@ -18,7 +18,7 @@ def test_locus_2():
     assert expected == actual
     
 def test_variant_1():
-    expected = Variant(chromosome = 1, position = 2, reference = "A", alternate = "G")
+    expected = Variant(chromosome = "1", position = 2, reference = "A", alternate = "G")
     actual = Variant.from_str("chr1_2_A_G")
     assert expected == actual
                 
@@ -28,7 +28,6 @@ def test_variant_2():
     actual = str(Variant.from_str(expected))
     assert expected == actual
 
-@pytest.mark.skip(reason="tbd")
 def test_structural_variants():
     expected = "chr9_96792507_T_<INS:ME:ALU>"
     actual = str(Variant.from_str(expected))

@@ -27,12 +27,27 @@ def na(f: typing.Callable[[str], X]) -> typing.Callable[[str], X]:
     return lambda value : None if value == 'NA' or value == 'na' else f(value)
     
 def ascii(value: str) -> str:
+    """
+    Remove non-ascci characters.
+    """
     return "".join(char for char in value if ord(char) < 128)
 
 class JSONifiable(object):
     @abc.abstractmethod
     def json_rep(self):
         """
-           Return an deep representation of the 
-           object that can is jsonencoded.
+           Return an object that can be jsonencoded.
         """
+        raise NotImplementedError
+
+        
+class Kwargs(object):
+    @abc.abstractmethod
+    def kwargs_rep(self) -> typing.Dict[str, typing.Any]:
+        None
+        """
+           Return constructor parameters for object
+           for shallow cloning.
+        """
+        raise NotImplementedError
+

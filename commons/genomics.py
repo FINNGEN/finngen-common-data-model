@@ -12,23 +12,23 @@ from commons.data import *
 @attr.s
 class Variant(JSONifiable):
     """
-    # TODO what is the right term for this object
 
-    DTO containing the chromosome position with
-    
+    DTO containing variant information
+
     """
-    chromosome = attr.ib(validator=instance_of(int))
+    chromosome = attr.ib(validator=instance_of(str))
     position = attr.ib(validator=instance_of(int))
     reference = attr.ib(validator=instance_of(str))
     alternate = attr.ib(validator=instance_of(str))
 
     @staticmethod
     def from_str(text: str) -> typing.Optional["Variant"]:
-        fragments = re.match(r'^chr(?P<chromosome>[0-9]+)_(?P<position>\d+)_(?P<reference>[ACGTU]{1,100})_(?P<alternate>[ACGTU]{1,100})$', text)
+        fragments = re.match(r'^chr(?P<chromosome>[0-9a-zA-Z]{1,2})_(?P<position>\d+)_(?P<reference>[^_]{1,1000})_(?P<alternate>.{1,1000})$', text)
         if fragments is None:
+            raise Exception(text)
             None
         else:
-            return Variant(chromosome=int(fragments.group('chromosome')),
+            return Variant(chromosome=fragments.group('chromosome'),
                            position=int(fragments.group('position')),
                            reference=fragments.group('reference'),
                            alternate=fragments.group('alternate'))
@@ -46,12 +46,12 @@ class Variant(JSONifiable):
         return self.__dict__
 
     @staticmethod
-    def columns(prefix : typing.Optional[str] = None) -> typing.List[Column]:
+    def columns(prefix : typing.Optional[str] = None, primary_key=False, nullable=False) -> typing.List[Column]:
         prefix = prefix if prefix is not None else ""
-        return [ Column('{}chromosome'.format(prefix), String(2), unique=False, nullable=False), 
-                 Column('{}position'.format(prefix), Integer, unique=False, nullable=False), 
-                 Column('{}ref'.format(prefix), String(100), unique=False, nullable=False), 
-                 Column('{}alt'.format(prefix), String(100), unique=False, nullable=False), ]
+        return [ Column('{}chromosome'.format(prefix), String(2), primary_key=primary_key, nullable=nullable),
+                 Column('{}position'.format(prefix), Integer, primary_key=primary_key, nullable=nullable),
+                 Column('{}ref'.format(prefix), String(1000), primary_key=primary_key, nullable=nullable),
+                 Column('{}alt'.format(prefix), String(1000), primary_key=primary_key, nullable=nullable), ]
 
 
     def __composite_values__(self):
@@ -62,6 +62,7 @@ class Variant(JSONifiable):
         :return: tuple (chromosome, position, reference, alternate)
         """
         return self.chromosome, self.position, self.reference, self.alternate
+
 
 # 
 @attr.s
@@ -76,7 +77,6 @@ class Locus(JSONifiable):
     chromosome = attr.ib(validator=attr.validators.and_(instance_of(str)))
     start = attr.ib(validator=instance_of(int))
     stop = attr.ib(validator=instance_of(int))
-
 
     @staticmethod
     def from_str(text: str) -> typing.Optional["Locus"]:
@@ -116,11 +116,10 @@ class Locus(JSONifiable):
     @staticmethod
     def columns(prefix : typing.Optional[str] = None) -> typing.List[Column]:
         prefix = prefix if prefix is not None else ""
-        return [ Column('{}chromosome'.format(prefix), String(2), unique=False, nullable=False), 
-                 Column('{}start'.format(prefix), Integer, unique=False, nullable=False), 
+        return [ Column('{}chromosome'.format(prefix), String(2), unique=False, nullable=False),
+                 Column('{}start'.format(prefix), Integer, unique=False, nullable=False),
                  Column('{}stop'.format(prefix), Integer, unique=False, nullable=False) ]
 
-    @staticmethod    
     def __composite_values__(self):
         """
         These are artifacts needed for composition by sqlalchemy.
