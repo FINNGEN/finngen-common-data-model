@@ -77,21 +77,26 @@ class Locus(JSONifiable):
     start = attr.ib(validator=instance_of(int))
     stop = attr.ib(validator=instance_of(int))
 
+
     @staticmethod
-    def from_str(text: str) -> typing.Optional["ChromosomeRange"]:
+    def from_str(text: str) -> typing.Optional["Locus"]:
         """
         Takes a string representing a range and returns a tuple of integers
         (chromosome,start,stop).  Returns None if it cannot be parsed.
-
-        TODO : start < stop
         """
         fragments = re.match(r'(?P<chromosome>[A-Za-z0-9]+):(?P<start>\d+)-(?P<stop>\d+)', text)
+        result = None
         if fragments is None:
-            return None
+            result = None
         else:
-            return Locus(chromosome=fragments.group('chromosome'),
-                         start=int(fragments.group('start')),
-                         stop=int(fragments.group('stop')))
+            chromosome=fragments.group('chromosome')
+            start=int(fragments.group('start'))
+            stop=int(fragments.group('stop'))
+            if start <= stop:
+                result = Locus(chromosome, start, stop)
+            else:
+                result = None
+        return result
 
     def __str__(self):
         """
