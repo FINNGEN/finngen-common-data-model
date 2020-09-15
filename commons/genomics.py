@@ -21,12 +21,31 @@ class Variant(JSONifiable):
     reference = attr.ib(validator=instance_of(str))
     alternate = attr.ib(validator=instance_of(str))
 
+    PARSER = re.compile('''^(chr)?
+                            (?P<chromosome>( M | MT | X | Y |
+                                             1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 
+                                             11 | 12 | 13 | 14 | 15 |16 | 17 | 18 | 19 | 20 | 
+                                             21 | 22 | 23 | 24 | 25))
+                                             
+                            (?P<separator>[_:/])
+                            
+                            (?P<position>\d+)
+
+                            (?P=separator)
+                            
+                            (?P<reference>( \<[^\>]{1,998}\>
+                                          | [^_:/]{1,1000} ))
+                            
+                            [_:/]
+                            
+                            (?P<alternate>( .{1,1000}  ))$
+                        ''', re.VERBOSE)
     @staticmethod
     def from_str(text: str) -> typing.Optional["Variant"]:
-        fragments = re.match(r'^chr(?P<chromosome>[0-9a-zA-Z]{1,2})_(?P<position>\d+)_(?P<reference>[^_]{1,1000})_(?P<alternate>.{1,1000})$', text)
+        fragments = Variant.PARSER.match(text)
         if fragments is None:
             raise Exception(text)
-            None
+            None 
         else:
             return Variant(chromosome=fragments.group('chromosome'),
                            position=int(fragments.group('position')),
@@ -34,10 +53,10 @@ class Variant(JSONifiable):
                            alternate=fragments.group('alternate'))
 
     def __str__(self) -> str:
-        return "chr{chromosome}_{position}_{reference}_{alternate}".format(chromosome=self.chromosome,
-                                                                           position=self.position,
-                                                                           reference=self.reference,
-                                                                           alternate=self.alternate)
+        return "{chromosome}:{position}:{reference}:{alternate}".format(chromosome=self.chromosome,
+                                                                        position=self.position,
+                                                                        reference=self.reference,
+                                                                        alternate=self.alternate)
 
     def json_rep(self):
         return self.__dict__
