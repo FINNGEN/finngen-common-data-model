@@ -1,7 +1,7 @@
-# Commons data model
+# Finngen common data model
 
-This creates a common data model to be used
-in the finngen project.
+This project contains common data model from common
+objects in the finngen project.
 
 The current objects are currently modeled.
 

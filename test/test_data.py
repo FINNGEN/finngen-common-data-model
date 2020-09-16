@@ -5,7 +5,7 @@ import uuid
 import random
 import pytest
 
-from commons.data import *
+from finngen_common_data_model.data import *
 
 def test_na():
     assert (na(str))("") == ""

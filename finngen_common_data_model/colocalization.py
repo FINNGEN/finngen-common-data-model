@@ -4,8 +4,8 @@ import typing
 import attr
 from attr.validators import instance_of
 from sqlalchemy import Table, MetaData, create_engine, Column, Integer, String, Float, Text
-from commons.genomics import *
-from commons.data import *
+from .genomics import *
+from .data import *
 
 
 

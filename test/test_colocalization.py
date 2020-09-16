@@ -4,8 +4,8 @@ import tempfile
 import uuid
 import random
 import pytest
-from commons.genomics import Locus, Variant
-from commons.colocalization import Colocalization
+from finngen_common_data_model.genomics import Locus, Variant
+from finngen_common_data_model.colocalization import Colocalization
 
 def test_colocalization():
     sample = ["source1", # source1

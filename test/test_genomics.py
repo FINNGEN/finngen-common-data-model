@@ -5,7 +5,7 @@ import uuid
 import random
 import pytest
 
-from commons.genomics import Locus, Variant
+from finngen_common_data_model.genomics import Locus, Variant
 
 def test_locus_1():
     expected = Locus(chromosome = "15",start = 78464464, stop =78864464)

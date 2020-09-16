@@ -6,7 +6,7 @@ from attr.validators import instance_of
 from sqlalchemy import Table, MetaData, create_engine, Column, Integer, String, Float, Text
 
 import re
-from commons.data import *
+from .data import *
         
 # Variant
 @attr.s
