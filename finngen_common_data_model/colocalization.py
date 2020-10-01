@@ -38,6 +38,33 @@ class CausalVariant(JSONifiable, Kwargs):
         d["variant2"] = str(d["variant2"]) if self.variant2 else None
         return d
 
+    def has_variant1(self) -> bool:
+        return self.variant1 and self.pip1 and self.beta1
+
+    def has_variant2(self) -> bool:
+        return self.variant2 and self.pip2 and self.beta2
+
+    def count_variant1(self) -> int:
+        return 1 if self.has_variant1() else 0
+
+    def count_variant2(self) -> int:
+        return 1 if self.has_variant2() else 0
+
+    def count_variants(self) -> int:
+        return self.count_variant1() + self.count_variant2()
+
+    def count_label(self) -> int:
+        if self.has_variant1() and self.has_variant2():
+            label = 'Both'
+        elif self.has_variant1():
+            label = 'CS1'
+        elif self.has_variant2():
+            label = 'CS2'
+        else:
+            label = 'None'
+        return label
+
+
     @staticmethod
     def from_list(variant1_str: str,
                   variant2_str: str,
