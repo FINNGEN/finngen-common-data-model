@@ -82,7 +82,7 @@ class Variant(JSONifiable, Kwargs):
     @staticmethod
     def columns(prefix : typing.Optional[str] = None, primary_key=False, nullable=False) -> typing.List[Column]:
         prefix = prefix if prefix is not None else ""
-        return [ Column('{}chromosome'.format(prefix), String(2), primary_key=primary_key, nullable=nullable),
+        return [ Column('{}chromosome'.format(prefix), Integer, primary_key=primary_key, nullable=nullable),
                  Column('{}position'.format(prefix), Integer, primary_key=primary_key, nullable=nullable),
                  Column('{}ref'.format(prefix), String(1000), primary_key=primary_key, nullable=nullable),
                  Column('{}alt'.format(prefix), String(1000), primary_key=primary_key, nullable=nullable), ]
@@ -166,7 +166,7 @@ class Locus(JSONifiable, Kwargs):
     @staticmethod
     def columns(prefix : typing.Optional[str] = None) -> typing.List[Column]:
         prefix = prefix if prefix is not None else ""
-        return [ Column('{}chromosome'.format(prefix), String(2), unique=False, nullable=False),
+        return [ Column('{}chromosome'.format(prefix), Integer, unique=False, nullable=False),
                  Column('{}start'.format(prefix), Integer, unique=False, nullable=False),
                  Column('{}stop'.format(prefix), Integer, unique=False, nullable=False) ]
 

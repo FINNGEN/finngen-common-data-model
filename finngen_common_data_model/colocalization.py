@@ -108,6 +108,7 @@ class Colocalization(Kwargs, JSONifiable):
     """
     DTO for colocalization.
 
+
     https://github.com/FINNGEN/colocalization/blob/master/docs/data_dictionary.txt
 
     Note : the column order is defined here.  This column order determines
