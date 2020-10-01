@@ -36,6 +36,7 @@ class CausalVariant(JSONifiable, Kwargs):
         d["variant1"] = str(d["variant1"]) if self.variant1 else None
         d["position2"] = self.variant2.position if self.variant2 else None
         d["variant2"] = str(d["variant2"]) if self.variant2 else None
+        d["count_variants"] = self.count_variants()
         return d
 
     def has_variant1(self) -> bool:
