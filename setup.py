@@ -9,6 +9,7 @@ setup(name='finngen_common_data_model',
       license='MIT',
       url='https://github.com/FINNGEN/finngen-common-data-model',
       package_dir={ 'finngen_common_data_model': 'finngen_common_data_model' },
+      tests_require=['pytest', 'tox', 'pytest-cov', ],
       install_requires=[ 'attrs>=19.3.0',
                          'SQLAlchemy>=1.3.18',
                          'pytest>=5.4.3' ])

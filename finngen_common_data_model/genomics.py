@@ -6,48 +6,63 @@ from attr.validators import instance_of
 from sqlalchemy import Table, MetaData, create_engine, Column, Integer, String, Float, Text
 
 import re
-from .data import *
-        
+from .data import JSONifiable, Kwargs
+
+
+CHROMOSOME_MAP = { 'X' : 23  , 'Y'  : 24 , 'M'  : 25  , 'MT' : 25  ,
+                   '1' : 1   , '2'  : 2  , '3'  : 3   , '4'  : 4   , '5' : 5   ,
+                   '6' : 6   , '7'  : 7  , '8'  : 8   , '9'  : 9   , '10' : 10 ,
+                   '11' : 11 , '12' : 12 , '13' : 13  , '14' : 14  , '15' : 15 ,
+                   '16' : 16 , '17' : 17 , '18' : 18  , '19' : 19  , '20' : 20 ,
+                   '21' : 21 , '22' : 22 , '23' : 23  , '24' : 24  , '25' : 25 }
+def string_to_chromosome(chromosome):
+    return CHROMOSOME_MAP[chromosome]
+
 # Variant
 @attr.s
-class Variant(JSONifiable):
+class Variant(JSONifiable, Kwargs):
     """
 
     DTO containing variant information
 
     """
-    chromosome = attr.ib(validator=instance_of(str))
+    chromosome = attr.ib(validator=instance_of(int))
     position = attr.ib(validator=instance_of(int))
     reference = attr.ib(validator=instance_of(str))
     alternate = attr.ib(validator=instance_of(str))
 
-    PARSER = re.compile('''^(chr)?
-                            (?P<chromosome>( M | MT | X | Y |
-                                             1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 
-                                             11 | 12 | 13 | 14 | 15 |16 | 17 | 18 | 19 | 20 | 
-                                             21 | 22 | 23 | 24 | 25))
-                                             
-                            (?P<separator>[_:/])
-                            
-                            (?P<position>\d+)
 
-                            (?P=separator)
-                            
-                            (?P<reference>( \<[^\>]{1,998}\>
-                                          | [^_:/]{1,1000} ))
-                            
-                            [_:/]
-                            
-                            (?P<alternate>( .{1,1000}  ))$
+    PARSER = re.compile(r'''^(chr)?
+                             (?P<chromosome>( M | MT | X | Y |
+                                              1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
+                                              11 | 12 | 13 | 14 | 15 |16 | 17 | 18 | 19 | 20 |
+                                              21 | 22 | 23 | 24 | 25))
+
+                             (?P<separator>[_:/])
+
+                             (?P<position>\d+)
+
+                             (?P=separator)
+
+                             (?P<reference>( \<[^\>]{1,998}\>
+                                           | [ATGC]{1,1000} ))
+
+                             [_:/]
+
+                             (?P<alternate>( \<[^\>]{1,998}\>
+                                           | [ATGC]{1,1000} ))$
                         ''', re.VERBOSE)
     @staticmethod
     def from_str(text: str) -> typing.Optional["Variant"]:
         fragments = Variant.PARSER.match(text)
         if fragments is None:
             raise Exception(text)
-            None 
         else:
-            return Variant(chromosome=fragments.group('chromosome'),
+            # @juhis
+            # We'd like to represent chromosomes as integers,
+            # X should be mapped to 23, Y to 24 and M or MT to 25.
+
+            return Variant(chromosome=string_to_chromosome(fragments.group('chromosome')),
                            position=int(fragments.group('position')),
                            reference=fragments.group('reference'),
                            alternate=fragments.group('alternate'))
@@ -61,7 +76,7 @@ class Variant(JSONifiable):
     def json_rep(self):
         return self.__dict__
 
-    def __repr__(self) -> typing.Dict[str, typing.Any]:
+    def kwargs_rep(self) -> typing.Dict[str, typing.Any]:
         return self.__dict__
 
     @staticmethod
@@ -85,7 +100,7 @@ class Variant(JSONifiable):
 
 # 
 @attr.s
-class Locus(JSONifiable):
+class Locus(JSONifiable, Kwargs):
     """
         Chromosome coordinate range
 
@@ -93,9 +108,24 @@ class Locus(JSONifiable):
         start: start of range
         stop: end of range
     """
-    chromosome = attr.ib(validator=attr.validators.and_(instance_of(str)))
+    chromosome = attr.ib(validator=attr.validators.and_(instance_of(int)))
     start = attr.ib(validator=instance_of(int))
     stop = attr.ib(validator=instance_of(int))
+
+    PARSER = re.compile(r'''^(chr)?
+                             (?P<chromosome>( M | MT | X | Y |
+                                              1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
+                                              11 | 12 | 13 | 14 | 15 |16 | 17 | 18 | 19 | 20 |
+                                              21 | 22 | 23 | 24 | 25))
+
+                             (?P<separator>[_:/])
+
+                             (?P<start>\d+)
+
+                             [_:/-]
+
+                             (?P<stop>\d+)$
+                        ''', re.VERBOSE)
 
     @staticmethod
     def from_str(text: str) -> typing.Optional["Locus"]:
@@ -103,19 +133,20 @@ class Locus(JSONifiable):
         Takes a string representing a range and returns a tuple of integers
         (chromosome,start,stop).  Returns None if it cannot be parsed.
         """
-        fragments = re.match(r'(?P<chromosome>[A-Za-z0-9]+):(?P<start>\d+)-(?P<stop>\d+)', text)
-        result = None
+
+        fragments = Locus.PARSER.match(text)
         if fragments is None:
-            result = None
+            raise Exception(text)
         else:
-            chromosome=fragments.group('chromosome')
+            chromosome=string_to_chromosome(fragments.group('chromosome'))
             start=int(fragments.group('start'))
             stop=int(fragments.group('stop'))
-            if start <= stop:
-                result = Locus(chromosome, start, stop)
+            if start > stop:
+                raise Exception(text)
             else:
-                result = None
-        return result
+                return Locus(chromosome=string_to_chromosome(fragments.group('chromosome')),
+                             start=start,
+                             stop=stop)
 
     def __str__(self):
         """
@@ -129,7 +160,7 @@ class Locus(JSONifiable):
     def json_rep(self):
         return self.__dict__
 
-    def __repr__(self) -> typing.Dict[str, typing.Any]:
+    def kwargs_rep(self) -> typing.Dict[str, typing.Any]:
         return self.__dict__
 
     @staticmethod
