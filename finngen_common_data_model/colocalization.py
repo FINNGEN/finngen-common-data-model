@@ -92,7 +92,7 @@ class CausalVariant(JSONifiable, Kwargs):
                  Column('{}beta2'.format(prefix), Float, unique=False, nullable=True),
                  *Variant.columns('{}variant1_'.format(prefix), nullable=True),
                  *Variant.columns('{}variant2_'.format(prefix), nullable=True)]
-    
+
     @staticmethod
     def __composite_values__(self):
         """
@@ -189,7 +189,7 @@ class Colocalization(Kwargs, JSONifiable):
                                         locus_id1=nvl(line[8], Variant.from_str),
                                         locus_id2=nvl(line[9], Variant.from_str),
 
-                                        locus = Locus(nvl(line[10], str), # chromosome
+                                        locus = Locus(nvl(line[10], string_to_chromosome), # chromosome
                                                       nvl(line[11], na(int)), # start
                                                       nvl(line[12], na(int))), # stop
 
@@ -243,4 +243,3 @@ class Colocalization(Kwargs, JSONifiable):
                  Column('{}len_cs1'.format(prefix), Integer, unique=False, nullable=False),
                  Column('{}len_cs2'.format(prefix), Integer, unique=False, nullable=False),
                  Column('{}len_inter'.format(prefix), Integer, unique=False, nullable=False) ]
-
