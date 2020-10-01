@@ -8,6 +8,10 @@ import json
 
 from finngen_common_data_model.genomics import Locus, Variant
 
+def test_locus_bad_chromosome():
+    with pytest.raises(ValueError):
+        Locus(chromosome = 30, start = 2, stop = 10)
+
 def test_locus_from_str_1():
     expected = Locus(chromosome = 15,start = 78464464, stop =78864464)
     actual = Locus.from_str("15:78464464-78864464")
@@ -37,6 +41,10 @@ def test_locus_2():
     locus = Locus(**kwargs_rep)
     actual = str(locus)
     assert expected == actual
+
+def test_variant_bad_chromosome():
+    with pytest.raises(ValueError):
+        Variant(chromosome = 30, position = 2, reference = "A", alternate = "G")
 
 def test_variant_1():
     expected = Variant(chromosome = 1, position = 2, reference = "A", alternate = "G")

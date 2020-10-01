@@ -27,6 +27,10 @@ class Variant(JSONifiable, Kwargs):
 
     """
     chromosome = attr.ib(validator=instance_of(int))
+    @chromosome.validator
+    def chromosome_in_range(self, attribute, value):
+        if not 1 <= value < 26:
+            raise ValueError("value out of bounds")
     position = attr.ib(validator=instance_of(int))
     reference = attr.ib(validator=instance_of(str))
     alternate = attr.ib(validator=instance_of(str))
@@ -109,6 +113,10 @@ class Locus(JSONifiable, Kwargs):
         stop: end of range
     """
     chromosome = attr.ib(validator=attr.validators.and_(instance_of(int)))
+    @chromosome.validator
+    def chromosome_in_range(self, attribute, value):
+        if not 1 <= value < 26:
+            raise ValueError("value out of bounds")
     start = attr.ib(validator=instance_of(int))
     stop = attr.ib(validator=instance_of(int))
 
