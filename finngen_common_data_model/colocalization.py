@@ -161,7 +161,11 @@ class Colocalization(Kwargs, JSONifiable):
     
     id = attr.ib(validator=attr.validators.optional(instance_of(int)), default=None)
 
-    IMPORT_COLUMN_NAMES = ('source1', 'source2', 'pheno1', 'pheno1_description', 'pheno2', 'pheno2_description', 'quant1', 'quant2', 'tissue1', 'tissue2', 'locus_id1', 'locus_id2', 'chrom', 'start', 'stop', 'clpp', 'clpa', 'vars', 'len_cs1', 'len_cs2', 'len_inter', 'vars1_info', 'vars2_info')
+    _IMPORT_COLUMN_NAMES = ('source1', 'source2', 'pheno1', 'pheno1_description', 'pheno2', 'pheno2_description', 'quant1', 'quant2', 'tissue1', 'tissue2', 'locus_id1', 'locus_id2', 'chrom', 'start', 'stop', 'clpp', 'clpa', 'vars', 'len_cs1', 'len_cs2', 'len_inter', 'vars1_info', 'vars2_info')
+    
+    @staticmethod
+    def cvs_column_names() -> typing.List[str]:
+        return list(Colocalization._IMPORT_COLUMN_NAMES)
     
     def kwargs_rep(self) -> typing.Dict[str, typing.Any]:
         return self.__dict__
@@ -177,7 +181,7 @@ class Colocalization(Kwargs, JSONifiable):
         return d
 
     @staticmethod
-    def column_names() -> typing.List[str]:
+    def db_column_names() -> typing.List[str]:
         return [c.name for c in Colocalization.__attrs_attrs__]
 
     @staticmethod

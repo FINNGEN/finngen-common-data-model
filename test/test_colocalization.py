@@ -102,7 +102,7 @@ def test_causal_variant_from_list_2():
     assert expected == actual
     
 def test_colocalization_columnname():
-    assert len(Colocalization.IMPORT_COLUMN_NAMES) == 19
+    assert len(Colocalization.cvs_column_names()) == 23
     
 def test_colocalization():
     sample = ["source1", # 0 source1
