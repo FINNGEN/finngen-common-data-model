@@ -8,7 +8,7 @@ from finngen_common_data_model.genomics import *
 from finngen_common_data_model.data import *
 
 
-@attr.s(frozen=True)
+#@attr.s(frozen=True)
 class CausalVariant(JSONifiable, Kwargs):
     """
     Causual variant DTO
