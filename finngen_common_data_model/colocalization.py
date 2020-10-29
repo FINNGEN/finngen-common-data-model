@@ -4,25 +4,27 @@ import typing
 import attr
 from attr.validators import instance_of
 from sqlalchemy import Table, MetaData, create_engine, Column, Integer, String, Float, Text
-from .genomics import *
-from .data import *
+from finngen_common_data_model.genomics import *
+from finngen_common_data_model.data import *
 
 
-
-@attr.s
+@attr.s(frozen=True)
 class CausalVariant(JSONifiable, Kwargs):
     """
     Causual variant DTO
 
-    pip1, pip2, beta1, beta2, variant
+    pip1, beta1
+    pip2, beta2
 
     """
-    variant1 = attr.ib(validator=instance_of(Variant))
-    variant2 = attr.ib(validator=instance_of(Variant))
+    variant = attr.ib(validator=attr.validators.optional(instance_of(Variant)))
+    
     pip1 = attr.ib(validator=attr.validators.optional(instance_of(float)))
-    pip2 = attr.ib(validator=attr.validators.optional(instance_of(float)))
     beta1 = attr.ib(validator=attr.validators.optional(instance_of(float)))
+    
+    pip2 = attr.ib(validator=attr.validators.optional(instance_of(float)))
     beta2 = attr.ib(validator=attr.validators.optional(instance_of(float)))
+
     id = attr.ib(validator=attr.validators.optional(instance_of(int)), default= None)
 
     def kwargs_rep(self) -> typing.Dict[str, typing.Any]:
@@ -31,68 +33,79 @@ class CausalVariant(JSONifiable, Kwargs):
     def json_rep(self):
         d = self.__dict__
         d = d.copy()
+
         d.pop("_sa_instance_state", None)
-        d["position1"] = self.variant1.position if self.variant1 else None
-        d["variant1"] = str(d["variant1"]) if self.variant1 else None
-        d["position2"] = self.variant2.position if self.variant2 else None
-        d["variant2"] = str(d["variant2"]) if self.variant2 else None
-        d["count_variants"] = self.count_variants()
+        d["position"] = self.variant.position if self.variant else None
+        d["variant"] = str(d["variant"]) if self.variant else None
+        d["count_cs"] = self.count_cs()
+        d["membership_cs"] = self.membership_cs()
         return d
 
-    def has_variant1(self) -> bool:
-        return self.variant1 and self.pip1 and self.beta1
+    def has_cs1(self) -> bool:
+        return (self.pip1 is not None) and (self.beta1 is not None)
 
-    def has_variant2(self) -> bool:
-        return self.variant2 and self.pip2 and self.beta2
+    def has_cs2(self) -> bool:
+        return (self.pip2 is not None) and (self.beta2 is not None)
 
-    def count_variant1(self) -> int:
-        return 1 if self.has_variant1() else 0
+    def count_cs1(self) -> int:
+        return 1 if self.has_cs1() else 0
 
-    def count_variant2(self) -> int:
-        return 1 if self.has_variant2() else 0
+    def count_cs2(self) -> int:
+        return 1 if self.has_cs2() else 0
 
-    def count_variants(self) -> int:
-        return self.count_variant1() + self.count_variant2()
+    def count_cs(self) -> int:
+        return self.count_cs1() + self.count_cs2()
 
-    def count_label(self) -> int:
-        if self.has_variant1() and self.has_variant2():
+    def membership_cs(self) -> int:
+        if self.has_cs1() and self.has_cs2():
             label = 'Both'
-        elif self.has_variant1():
+        elif self.has_cs1():
             label = 'CS1'
-        elif self.has_variant2():
+        elif self.has_cs2():
             label = 'CS2'
         else:
             label = 'None'
         return label
 
-
+    @staticmethod
+    def parse_causal_variant(x : str):
+        variant, pip, beta = x.split(",")
+        return (float(pip),float(beta))
+    
+    
     @staticmethod
     def from_list(variant1_str: str,
-                  variant2_str: str,
-                  pip1_str: str,
-                  pip2_str: str,
-                  beta1_str: str,
-                  beta2_str: str) -> typing.List["Colocalization"]:
+                  variant2_str: str) -> typing.List["Colocalization"]:
 
-        variant1_list = list(map(Variant.from_str,variant1_str.split(',')))
-        variant2_list = list(map(Variant.from_str,variant2_str.split(',')))
-        pip1_list = list(map(na(float),pip1_str.split(',')))
-        pip2_list = list(map(na(float),pip2_str.split(',')))
-        beta1_list = list(map(na(float),beta1_str.split(',')))
-        beta2_list = list(map(na(float),beta2_str.split(',')))
-        result = list(map(lambda p : CausalVariant(*p),zip(variant1_list,variant2_list,pip1_list,pip2_list,beta1_list,beta2_list)))
-        return result
+        vars1_index= { x.split(",")[0]:x for x in variant1_str.split(";") }
+        vars2_index= { x.split(",")[0]:x for x in variant2_str.split(";") }
 
+        split = CausalVariant.parse_causal_variant
+
+        # list of all variants
+        keys = set([*vars1_index.keys(),*vars2_index.keys()])
+        # lookup variants in the two indexes
+        keys = map(lambda x : [x,vars1_index.get(x),vars2_index.get(x)],keys)        
+        
+        keys = [ [Variant.from_str(x[0]),nvl(x[1],split),nvl(x[2],split)] for x in keys]
+        keys = [ [k[0],
+                  *(k[1] or (None,None)),
+                  *(k[2] or (None,None))] for k in keys]
+        
+        causalvariants = [ CausalVariant(*k) for k in keys]
+        return causalvariants
+    
     @staticmethod
     def columns(prefix : typing.Optional[str] = None) -> typing.List[Column]:
         prefix = prefix if prefix is not None else ""
-        return [ Column('{}id'.format(prefix), Integer, primary_key=True, autoincrement=True),
-                 Column('{}pip1'.format(prefix), Float, unique=False, nullable=True),
-                 Column('{}pip2'.format(prefix), Float, unique=False, nullable=True),
-                 Column('{}beta1'.format(prefix), Float, unique=False, nullable=True),
-                 Column('{}beta2'.format(prefix), Float, unique=False, nullable=True),
-                 *Variant.columns('{}variant1_'.format(prefix), nullable=True),
-                 *Variant.columns('{}variant2_'.format(prefix), nullable=True)]
+        return [
+            Column('{}id'.format(prefix), Integer, primary_key=True, autoincrement=True),
+            Column('{}pip1'.format(prefix), Float, unique=False, nullable=True),
+            Column('{}pip2'.format(prefix), Float, unique=False, nullable=True),
+            Column('{}beta1'.format(prefix), Float, unique=False, nullable=True),
+            Column('{}beta2'.format(prefix), Float, unique=False, nullable=True),
+            *Variant.columns(nullable=True),
+        ]
 
     @staticmethod
     def __composite_values__(self):
@@ -118,10 +131,16 @@ class Colocalization(Kwargs, JSONifiable):
     """
     source1 = attr.ib(validator=instance_of(str))
     source2 = attr.ib(validator=instance_of(str))
+    
     phenotype1 = attr.ib(validator=instance_of(str))
     phenotype1_description = attr.ib(validator=instance_of(str))
+
     phenotype2 = attr.ib(validator=instance_of(str))
     phenotype2_description = attr.ib(validator=instance_of(str))
+
+    quant1 = attr.ib(validator=attr.validators.optional(instance_of(str)))
+    quant2 = attr.ib(validator=attr.validators.optional(instance_of(str)))
+
     tissue1 = attr.ib(validator=attr.validators.optional(instance_of(str)))
     tissue2 = attr.ib(validator=instance_of(str))
 
@@ -133,15 +152,13 @@ class Colocalization(Kwargs, JSONifiable):
     clpp = attr.ib(validator=instance_of(float))
     clpa = attr.ib(validator=instance_of(float))
 
-    beta_id1 = attr.ib(validator=attr.validators.optional(instance_of(float)))
-    beta_id2 = attr.ib(validator=attr.validators.optional(instance_of(float)))
-
-    variants = attr.ib(validator=attr.validators.deep_iterable(member_validator=instance_of(CausalVariant),
-                                                               iterable_validator=instance_of(typing.List)))
     len_cs1 = attr.ib(validator=instance_of(int))
     len_cs2 = attr.ib(validator=instance_of(int))
     len_inter = attr.ib(validator=instance_of(int))
 
+    variants = attr.ib(validator=attr.validators.deep_iterable(member_validator=instance_of(CausalVariant),
+                                                               iterable_validator=instance_of(typing.List)))
+    
     id = attr.ib(validator=attr.validators.optional(instance_of(int)), default=None)
     def kwargs_rep(self) -> typing.Dict[str, typing.Any]:
         return self.__dict__
@@ -176,38 +193,40 @@ class Colocalization(Kwargs, JSONifiable):
         :param line: string array with value
         :return: colocalization object
         """
+        variants = CausalVariant.from_list(nvl(line[21], str),
+                                           nvl(line[22], str))
 
         colocalization = Colocalization(source1=nvl(line[0], str),
                                         source2=nvl(line[1], str),
 
                                         phenotype1=nvl(line[2], ascii),
                                         phenotype1_description=nvl(line[3], ascii),
+                                        
                                         phenotype2=nvl(line[4], ascii),
                                         phenotype2_description=nvl(line[5], ascii),
 
-                                        tissue1=nvl(line[6], str),
-                                        tissue2=nvl(line[7], str),
-                                        locus_id1=nvl(line[8], Variant.from_str),
-                                        locus_id2=nvl(line[9], Variant.from_str),
+                                        quant1=nvl(line[6], str),
+                                        quant2=nvl(line[7], str),
+                                        
+                                        tissue1=nvl(line[8], str),
+                                        tissue2=nvl(line[9], str),
+                                        
+                                        locus_id1=nvl(line[10], Variant.from_str),
+                                        locus_id2=nvl(line[11], Variant.from_str),
 
-                                        locus = Locus(nvl(line[10], string_to_chromosome), # chromosome
-                                                      nvl(line[11], na(int)), # start
-                                                      nvl(line[12], na(int))), # stop
+                                        locus = Locus(nvl(line[12], string_to_chromosome), # chromosome
+                                                      nvl(line[13], na(int)), # start
+                                                      nvl(line[14], na(int))), # stop
 
-                                        clpp=nvl(line[13], float),
-                                        clpa=nvl(line[14], float),
-                                        beta_id1=nvl(line[15], na(float)),
-                                        beta_id2=nvl(line[16], na(float)),
-                                        variants = CausalVariant.from_list(nvl(line[17], str),
-                                                                           nvl(line[17], str),
-                                                                           nvl(line[18], str),
-                                                                           nvl(line[19], str),
-                                                                           nvl(line[20], str),
-                                                                           nvl(line[21], str)),
-
-                                        len_cs1=nvl(line[22], na(int)),
-                                        len_cs2=nvl(line[23], na(int)),
-                                        len_inter=nvl(line[24], na(int)))
+                                        clpp=nvl(line[15], float),
+                                        clpa=nvl(line[16], float),
+                                        # var line[17]
+                                        len_cs1=nvl(line[18], na(int)),
+                                        len_cs2=nvl(line[19], na(int)),
+                                        len_inter=nvl(line[20], na(int)),
+                                        
+                                        variants = variants
+        )
         return colocalization
 
     @staticmethod
@@ -225,6 +244,10 @@ class Colocalization(Kwargs, JSONifiable):
                  Column('{}phenotype1_description'.format(prefix), String(1000), unique=False, nullable=False),
                  Column('{}phenotype2'.format(prefix), String(1000), unique=False, nullable=False),
                  Column('{}phenotype2_description'.format(prefix), String(1000), unique=False, nullable=False),
+
+                 Column('{}quant1'.format(prefix), String(80), unique=False, nullable=True),
+                 Column('{}quant2'.format(prefix), String(80), unique=False, nullable=True),
+                 
                  Column('{}tissue1'.format(prefix), String(80), unique=False, nullable=True),
                  Column('{}tissue2'.format(prefix), String(80), unique=False, nullable=True),
 
@@ -238,8 +261,6 @@ class Colocalization(Kwargs, JSONifiable):
 
                  Column('{}clpp'.format(prefix), Float, unique=False, nullable=False),
                  Column('{}clpa'.format(prefix), Float, unique=False, nullable=False),
-                 Column('{}beta_id1'.format(prefix), Float, unique=False, nullable=True),
-                 Column('{}beta_id2'.format(prefix), Float, unique=False, nullable=True),
 
                  Column('{}len_cs1'.format(prefix), Integer, unique=False, nullable=False),
                  Column('{}len_cs2'.format(prefix), Integer, unique=False, nullable=False),

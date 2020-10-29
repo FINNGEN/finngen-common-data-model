@@ -19,7 +19,7 @@ def string_to_chromosome(chromosome):
     return CHROMOSOME_MAP[chromosome]
 
 # Variant
-@attr.s
+@attr.s(frozen=True)
 class Variant(JSONifiable, Kwargs):
     """
 
@@ -76,6 +76,16 @@ class Variant(JSONifiable, Kwargs):
                                                                         position=self.position,
                                                                         reference=self.reference,
                                                                         alternate=self.alternate)
+
+
+    # def __hash__(self):
+    #     hash((self.position,self.reference,self.alternate))
+
+    # def __eq__(self,other):
+    #     self.__class__ == other.__class__ and self.position == other.position and self.reference == other.reference and self.alternate == other.alternate
+
+    # def __ne__(self,other):
+    #     not self.__eq(other)
 
     def json_rep(self):
         return self.__dict__
