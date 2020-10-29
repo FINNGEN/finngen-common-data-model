@@ -160,6 +160,9 @@ class Colocalization(Kwargs, JSONifiable):
                                                                iterable_validator=instance_of(typing.List)))
     
     id = attr.ib(validator=attr.validators.optional(instance_of(int)), default=None)
+
+    IMPORT_COLUMN_NAMES = ("source1", "source2", "pheno1", "pheno2", "tissue1", "tissue2",  "locus_id1", "locus_id2", "chrom", "start", "stop", "clpp", "clpa", "vars", "len_cs1", "len_cs2", "len_inter", "vars1_info", "vars2_info", )
+    
     def kwargs_rep(self) -> typing.Dict[str, typing.Any]:
         return self.__dict__
 

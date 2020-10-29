@@ -7,7 +7,6 @@ import pytest
 from finngen_common_data_model.genomics import Locus, Variant
 from finngen_common_data_model.colocalization import Colocalization, CausalVariant
 
-
 def test_parse_causal_variant():
     actual = CausalVariant.parse_causal_variant('1_1_A_A,0.02,0.19')
     expected = (0.02,0.19)
@@ -102,7 +101,9 @@ def test_causal_variant_from_list_2():
     actual = set(actual)
     assert expected == actual
     
-
+def test_colocalization_columnname():
+    assert len(Colocalization.IMPORT_COLUMN_NAMES) == 19
+    
 def test_colocalization():
     sample = ["source1", # 0 source1
               "source2", # 1 source2
