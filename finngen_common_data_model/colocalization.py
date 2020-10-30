@@ -8,7 +8,7 @@ from finngen_common_data_model.genomics import *
 from finngen_common_data_model.data import *
 
 
-#@attr.s(frozen=True)
+@attr.s
 class CausalVariant(JSONifiable, Kwargs):
     """
     Causual variant DTO
@@ -25,8 +25,8 @@ class CausalVariant(JSONifiable, Kwargs):
     pip2 = attr.ib(validator=attr.validators.optional(instance_of(float)))
     beta2 = attr.ib(validator=attr.validators.optional(instance_of(float)))
 
-    id = attr.ib(validator=attr.validators.optional(instance_of(int)), default= None)
-
+    # id : note this is skipped as it is managed by SQL Alchemy
+    
     def kwargs_rep(self) -> typing.Dict[str, typing.Any]:
         return self.__dict__
 
@@ -105,7 +105,7 @@ class CausalVariant(JSONifiable, Kwargs):
             Column('{}pip2'.format(prefix), Float, unique=False, nullable=True),
             Column('{}beta1'.format(prefix), Float, unique=False, nullable=True),
             Column('{}beta2'.format(prefix), Float, unique=False, nullable=True),
-            *Variant.columns('{}variant_'.format(prefix), nullable=False)]
+            *Variant.columns('{}variant_'.format(prefix), nullable=False)
         ]
 
     @staticmethod
@@ -176,8 +176,9 @@ class Colocalization(Kwargs, JSONifiable):
         print(d)
         d["locus_id1"] = str(d["locus_id1"]) if self.locus_id1 else None
         d["locus_id2"] = str(d["locus_id2"]) if self.locus_id2  else None
-        d["cs_size_1"] = sum(map(lambda c : c.count_variant1(), self.variants))
-        d["cs_size_2"] = sum(map(lambda c : c.count_variant2(), self.variants))
+        d["cs_size_1"] = sum(map(lambda c : c.count_cs1(), self.variants))
+        d["cs_size_2"] = sum(map(lambda c : c.count_cs2(), self.variants))
+        d["cs_size"] = 0 if self.variants is None else len(self.variants)
         d["variants"] = list(map(lambda c : c.json_rep(), self.variants))
         return d
 
