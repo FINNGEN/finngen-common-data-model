@@ -96,6 +96,7 @@ class CausalVariant(JSONifiable, Kwargs):
         return causalvariants
     
     @staticmethod
+
     def columns(prefix : typing.Optional[str] = None) -> typing.List[Column]:
         prefix = prefix if prefix is not None else ""
         return [
@@ -104,7 +105,7 @@ class CausalVariant(JSONifiable, Kwargs):
             Column('{}pip2'.format(prefix), Float, unique=False, nullable=True),
             Column('{}beta1'.format(prefix), Float, unique=False, nullable=True),
             Column('{}beta2'.format(prefix), Float, unique=False, nullable=True),
-            *Variant.columns(nullable=True),
+            *Variant.columns('{}variant_'.format(prefix), nullable=False)]
         ]
 
     @staticmethod
