@@ -25,6 +25,8 @@ class CausalVariant(JSONifiable, Kwargs):
     pip2 = attr.ib(validator=attr.validators.optional(instance_of(float)))
     beta2 = attr.ib(validator=attr.validators.optional(instance_of(float)))
 
+    id = attr.ib(validator=attr.validators.optional(instance_of(int)), default=None)
+    
     # id : note this is skipped as it is managed by SQL Alchemy
     
     def kwargs_rep(self) -> typing.Dict[str, typing.Any]:
@@ -100,7 +102,7 @@ class CausalVariant(JSONifiable, Kwargs):
     def columns(prefix : typing.Optional[str] = None) -> typing.List[Column]:
         prefix = prefix if prefix is not None else ""
         return [
-            Column('{}id'.format(prefix), Integer, primary_key=True, autoincrement=True),
+            Column('{}id'.format(prefix), Integer, primary_key=True, autoincrement=False),
             Column('{}pip1'.format(prefix), Float, unique=False, nullable=True),
             Column('{}pip2'.format(prefix), Float, unique=False, nullable=True),
             Column('{}beta1'.format(prefix), Float, unique=False, nullable=True),
@@ -143,7 +145,7 @@ class Colocalization(Kwargs, JSONifiable):
     quant2 = attr.ib(validator=attr.validators.optional(instance_of(str)))
 
     tissue1 = attr.ib(validator=attr.validators.optional(instance_of(str)))
-    tissue2 = attr.ib(validator=instance_of(str))
+    tissue2 = attr.ib(validator=attr.validators.optional(instance_of(str)))
 
     locus_id1 = attr.ib(validator=instance_of(Variant))
     locus_id2 = attr.ib(validator=instance_of(Variant))
@@ -162,7 +164,29 @@ class Colocalization(Kwargs, JSONifiable):
     
     id = attr.ib(validator=attr.validators.optional(instance_of(int)), default=None)
 
-    _IMPORT_COLUMN_NAMES = ('source1', 'source2', 'pheno1', 'pheno1_description', 'pheno2', 'pheno2_description', 'quant1', 'quant2', 'tissue1', 'tissue2', 'locus_id1', 'locus_id2', 'chrom', 'start', 'stop', 'clpp', 'clpa', 'vars', 'len_cs1', 'len_cs2', 'len_inter', 'vars1_info', 'vars2_info')
+    _IMPORT_COLUMN_NAMES = ('source1',
+                            'source2',
+                            'pheno1',
+                            'pheno1_description',
+                            'pheno2',
+                            'pheno2_description',
+                            'quant1',
+                            'quant2',
+                            'tissue1',
+                            'tissue2',
+                            'locus_id1',
+                            'locus_id2',
+                            'chrom',
+                            'start',
+                            'stop',
+                            'clpp',
+                            'clpa',
+                            'vars',
+                            'len_cs1',
+                            'len_cs2',
+                            'len_inter',
+                            'vars1_info',
+                            'vars2_info')
     
     @staticmethod
     def cvs_column_names() -> typing.List[str]:
@@ -187,7 +211,7 @@ class Colocalization(Kwargs, JSONifiable):
         return [c.name for c in Colocalization.__attrs_attrs__]
 
     @staticmethod
-    def from_list(line: typing.List[str]) -> "Colocalization":
+    def from_list(line: typing.List[str],id = None) -> "Colocalization":
         """
         Constructor method used to create colocalization from
         a row of data.
@@ -234,7 +258,9 @@ class Colocalization(Kwargs, JSONifiable):
                                         len_cs2=nvl(line[19], na(int)),
                                         len_inter=nvl(line[20], na(int)),
                                         
-                                        variants = variants
+                                        variants = variants,
+
+                                        id = id
         )
         return colocalization
 
@@ -246,7 +272,7 @@ class Colocalization(Kwargs, JSONifiable):
     @staticmethod
     def columns(prefix : typing.Optional[str] = None) -> typing.List[Column]:
         prefix = prefix if prefix is not None else ""
-        return [ Column('{}id'.format(prefix), Integer, primary_key=True, autoincrement=True),
+        return [ Column('{}id'.format(prefix), Integer, primary_key=True, autoincrement=False),
                  Column('{}source1'.format(prefix), String(80), unique=False, nullable=False),
                  Column('{}source2'.format(prefix), String(80), unique=False, nullable=False),
                  Column('{}phenotype1'.format(prefix), String(1000), unique=False, nullable=False),
