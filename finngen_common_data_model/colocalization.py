@@ -30,7 +30,7 @@ class CausalVariant(JSONifiable, Kwargs):
     # id : note this is skipped as it is managed by SQL Alchemy
     
     def kwargs_rep(self) -> typing.Dict[str, typing.Any]:
-        return self.__dict__
+        return {x: self.__dict__[x] for x in ["variant", "pip1", "beta1" , "pip2", "beta2" ] }
 
     def json_rep(self):
         d = self.__dict__
@@ -120,6 +120,10 @@ class CausalVariant(JSONifiable, Kwargs):
         """
         return self.variant , self.pip1 , self.pip2 , self.beta1 ,self.beta2
 
+    @staticmethod
+    def db_column_names() -> typing.List[str]:
+        return [c.name for c in CausalVariant.__attrs_attrs__]
+    
 @attr.s
 class Colocalization(Kwargs, JSONifiable):
     """
@@ -193,11 +197,20 @@ class Colocalization(Kwargs, JSONifiable):
         return list(Colocalization._IMPORT_COLUMN_NAMES)
     
     def kwargs_rep(self) -> typing.Dict[str, typing.Any]:
-        return self.__dict__
+        c = {name : getattr(self,name) for name in [ "source1", "source2",
+                                                     "phenotype1", "phenotype1_description",
+                                                     "phenotype2", "phenotype2_description",
+                                                     "quant1", "quant2",
+                                                     "tissue1", "tissue2",
+                                                     "locus_id1", "locus_id2",
+                                                     "locus",
+                                                     "clpp", "clpa",
+                                                     "len_cs1", "len_cs2", "len_inter", ] }
+        c["variants"] = list(map(lambda v : CausalVariant(**v.kwargs_rep()),self.variants))
+        return c
 
     def json_rep(self):
         d = self.__dict__
-        print(d)
         d["locus_id1"] = str(d["locus_id1"]) if self.locus_id1 else None
         d["locus_id2"] = str(d["locus_id2"]) if self.locus_id2  else None
         d["cs_size_1"] = sum(map(lambda c : c.count_cs1(), self.variants))

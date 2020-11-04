@@ -49,7 +49,7 @@ def test_membership_cs():
     expected = ['Both', 'CS2', 'CS1', 'None']
     assert expected == actual
 
-def test_kwargs_rep():
+def test_causal_variants_kwargs_rep():
     actual = list(map(lambda c : c.kwargs_rep(), causal_variants))
     expected = [ { 'beta1': 0.11, 'beta2': 0.22, 'pip1': 0.1,  'pip2': 0.2,  'variant': Variant(chromosome=1, position=1, reference='A', alternate='G'), },
                  { 'beta1': None, 'beta2': 0.22, 'pip1': None, 'pip2': 0.2,  'variant': None },
@@ -81,8 +81,87 @@ def test_causal_variant_from_list_1():
         CausalVariant(variant=Variant(chromosome=1, position=1, reference='T', alternate='G'), pip1=0.03, beta1=0.17, pip2=None, beta2=None),
     }
     actual = CausalVariant.from_list(vars1_info, vars2_info)
-    actual = set(actua l)
+    actual = set(actual)
     assert expected == actual
+
+
+
+def test_colocalization_kwargs_rep():
+    expected = { 'clpa': 11.0,
+                 'clpp': 10.0,
+                 'len_cs1': 1,
+                 'len_cs2': 2,
+                 'len_inter': 3,
+                 'locus': Locus(chromosome=7, start=8, stop=9),
+                 'locus_id1': Variant(chromosome=1, position=2, reference='C', alternate='A'),
+                 'locus_id2': Variant(chromosome=3, position=4, reference='C', alternate='A'),
+                 'phenotype1': 'phenotype1',
+                 'phenotype1_description': 'phenotype1_description',
+                 'phenotype2': 'phenotype2',
+                 'phenotype2_description': 'phenotype2_description',
+                 'quant1': None,
+                 'quant2': None,
+                 'source1': 'source1',
+                 'source2': 'source2',
+                 'tissue1': 'tissue1',
+                 'tissue2': 'tissue2',
+                 'variants': [CausalVariant(variant=Variant(chromosome=1, position=1, reference='G', alternate='A'), pip1=None, beta1=None, pip2=0.01, beta2=0.19, id=None),
+                              CausalVariant(variant=Variant(chromosome=1, position=1, reference='A', alternate='A'), pip1=0.02, beta1=0.19, pip2=None, beta2=None, id=None)],
+    }
+
+    colocalization = Colocalization(source1='source1',
+                                    source2='source2',
+                                    
+                                    phenotype1='phenotype1',
+                                    phenotype1_description='phenotype1_description',
+                                    
+                                    phenotype2='phenotype2',
+                                    phenotype2_description='phenotype2_description',
+                                    
+                                    quant1=None,
+                                    quant2=None,
+                                    
+                                    tissue1='tissue1',
+                                    tissue2='tissue2',
+                                  
+                                    locus_id1=Variant(chromosome=1,
+                                                      position=2,
+                                                      reference='C',
+                                                      alternate='A'),
+                                    locus_id2=Variant(chromosome=3,
+                                                      position=4,
+                                                      reference='C',
+                                                      alternate='A'),
+                                  
+                                    locus=Locus(chromosome=7,
+                                                start=8,
+                                                stop=9),
+                                  
+                                    clpp=10.0,
+                                    clpa=11.0,
+                                    
+                                    len_cs1=1,
+                                    len_cs2=2,
+                                    
+                                    len_inter=3,
+                                    variants=[CausalVariant(variant=Variant(chromosome=1,
+                                                                            position=1,
+                                                                            reference='G',
+                                                                            alternate='A'),
+                                                            pip1=None,
+                                                            beta1=None,
+                                                            pip2=0.01,
+                                                            beta2=0.19),
+                                              CausalVariant(variant=Variant(chromosome=1,
+                                                                            position=1,
+                                                                            reference='A',
+                                                                            alternate='A'),
+                                                            pip1=0.02,
+                                                            beta1=0.19,
+                                                            pip2=None,
+                                                            beta2=None)],)
+    assert colocalization.kwargs_rep() == expected
+
 
 # def test_causal_variant_from_list_2():
 #     vars1_info = "1_1_A_A,0.02,0.19"
