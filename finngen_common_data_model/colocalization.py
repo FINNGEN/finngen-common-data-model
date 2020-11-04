@@ -205,7 +205,8 @@ class Colocalization(Kwargs, JSONifiable):
                                                      "locus_id1", "locus_id2",
                                                      "locus",
                                                      "clpp", "clpa",
-                                                     "len_cs1", "len_cs2", "len_inter", ] }
+                                                     "len_cs1", "len_cs2", "len_inter",
+                                                     "id" ] }
         c["variants"] = list(map(lambda v : CausalVariant(**v.kwargs_rep()),self.variants))
         return c
 
