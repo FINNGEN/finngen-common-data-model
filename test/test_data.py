@@ -7,9 +7,9 @@ def test_na():
 
 
 def test_ascii():
-    assert ascii("") == ""
-    assert ascii("na") == "na"
-    assert ascii("AlzheimerÕs disease") == "Alzheimers disease"
+    assert only_ascii("") == ""
+    assert only_ascii("na") == "na"
+    assert only_ascii("AlzheimerÕs disease") == "Alzheimers disease"
 
 
 def test_nvl():

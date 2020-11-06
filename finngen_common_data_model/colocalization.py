@@ -327,11 +327,11 @@ class Colocalization(Kwargs, JSONifiable):
         colocalization = Colocalization(source1=nvl(line[0], str),
                                         source2=nvl(line[1], str),
 
-                                        phenotype1=nvl(line[2], ascii),
-                                        phenotype1_description=nvl(line[3], ascii),
+                                        phenotype1=nvl(line[2], only_ascii),
+                                        phenotype1_description=nvl(line[3], only_ascii),
 
-                                        phenotype2=nvl(line[4], ascii),
-                                        phenotype2_description=nvl(line[5], ascii),
+                                        phenotype2=nvl(line[4], only_ascii),
+                                        phenotype2_description=nvl(line[5], only_ascii),
 
                                         quant1=nvl(line[6], str),
                                         quant2=nvl(line[7], str),
