@@ -1,11 +1,11 @@
-import abc
-import attr
 import typing
+import re
+import typing
+
 import attr
 from attr.validators import instance_of
-from sqlalchemy import Table, MetaData, create_engine, Column, Integer, String, Float, Text
+from sqlalchemy import Column, Integer, String, SmallInteger
 
-import re
 from .data import JSONifiable, Kwargs
 
 CHROMOSOME_MAP = {'X': 23, 'Y': 24, 'M': 25, 'MT': 25,
@@ -97,7 +97,7 @@ class Variant(JSONifiable, Kwargs):
     @staticmethod
     def columns(prefix: typing.Optional[str] = None, primary_key=False, nullable=False) -> typing.List[Column]:
         prefix = prefix if prefix is not None else ""
-        return [Column('{}chromosome'.format(prefix), Integer, primary_key=primary_key, nullable=nullable),
+        return [Column('{}chromosome'.format(prefix), SmallInteger, primary_key=primary_key, nullable=nullable),
                 Column('{}position'.format(prefix), Integer, primary_key=primary_key, nullable=nullable),
                 Column('{}ref'.format(prefix), String(1000), primary_key=primary_key, nullable=nullable),
                 Column('{}alt'.format(prefix), String(1000), primary_key=primary_key, nullable=nullable), ]
@@ -192,7 +192,7 @@ class Locus(JSONifiable, Kwargs):
     @staticmethod
     def columns(prefix: typing.Optional[str] = None) -> typing.List[Column]:
         prefix = prefix if prefix is not None else ""
-        return [Column('{}chromosome'.format(prefix), Integer, unique=False, nullable=False),
+        return [Column('{}chromosome'.format(prefix), SmallInteger, unique=False, nullable=False),
                 Column('{}start'.format(prefix), Integer, unique=False, nullable=False),
                 Column('{}stop'.format(prefix), Integer, unique=False, nullable=False)]
 
