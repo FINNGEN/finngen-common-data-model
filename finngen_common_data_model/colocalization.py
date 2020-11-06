@@ -19,24 +19,43 @@ class CausalVariant(JSONifiable, Kwargs):
     """
     pip1 = attr.ib(validator=attr.validators.optional(instance_of(float)))
     beta1 = attr.ib(validator=attr.validators.optional(instance_of(float)))
-    
+
     pip2 = attr.ib(validator=attr.validators.optional(instance_of(float)))
     beta2 = attr.ib(validator=attr.validators.optional(instance_of(float)))
 
     causal_variant_id = attr.ib(validator=attr.validators.optional(instance_of(int)), default=None)
-    
+
     variant = attr.ib(instance_of(Variant))
-    
+
     # id : note this is skipped as it is managed by SQL Alchemy
 
     @staticmethod
-    def sortKey(c):
-        return Variant.sortKey(c.variant)
-    
+    def sort_key(c):
+        """
+        Compare method for sorting causal variants.
+        The variants are sorted by the variant.
+
+        :param c:
+        :return: sort key
+        """
+        return Variant.sort_key(c.variant)
+
     def kwargs_rep(self) -> typing.Dict[str, typing.Any]:
-        return {x: self.__dict__[x] for x in ["variant", "pip1", "beta1" , "pip2", "beta2", "causal_variant_id" ] }
+        """
+        Return the parameters to construct the
+        causal variant.
+
+        :return: kwargs
+        """
+        return {x: self.__dict__[x] for x in ["variant", "pip1", "beta1", "pip2", "beta2", "causal_variant_id"]}
 
     def json_rep(self):
+        """
+        Returns the json representation of the
+        object.
+
+        :return: json
+        """
         d = self.__dict__
         d = d.copy()
 
@@ -48,21 +67,51 @@ class CausalVariant(JSONifiable, Kwargs):
         return d
 
     def has_cs1(self) -> bool:
+        """
+        Returns if this causal variant has a first credible
+        set.
+        :return: boolean that is true if there is a first credible set
+        """
         return (self.pip1 is not None) and (self.beta1 is not None)
 
     def has_cs2(self) -> bool:
+        """
+        Returns if this causal variant has a second credible
+        set.
+        :return: boolean that is true if there is a second credible set
+        """
         return (self.pip2 is not None) and (self.beta2 is not None)
 
     def count_cs1(self) -> int:
+        """
+        Returns the number of first credible sets (0 or 1)
+        set.
+        :return: number of first credible sets (0 or 1)
+        """
         return 1 if self.has_cs1() else 0
 
     def count_cs2(self) -> int:
+        """
+        Returns the number of second credible sets (0 or 1)
+        set.
+        :return: number of second credible sets (0 or 1)
+        """
         return 1 if self.has_cs2() else 0
 
     def count_cs(self) -> int:
+        """
+        Returns the number of credible sets (0 - 2)
+        set.
+        :return: number of credible sets (0 - 2)
+        """
         return self.count_cs1() + self.count_cs2()
 
-    def membership_cs(self) -> int:
+    def membership_cs(self) -> str:
+        """
+        Returns a label indicating the cardinality
+        of the credible sets.
+        :return: 'Both' , 'CS1' , 'CS2', 'None'
+        """
         if self.has_cs1() and self.has_cs2():
             label = 'Both'
         elif self.has_cs1():
@@ -74,39 +123,57 @@ class CausalVariant(JSONifiable, Kwargs):
         return label
 
     @staticmethod
-    def parse_causal_variant(x : str):
+    def parse_causal_variant(x: str):
+        """
+        Parses fields in a casual variant
+        :param x: returns the parsed casual variant
+        :return:
+        """
         variant, pip, beta = x.split(",")
-        return (float(pip),float(beta))
-    
-    
+        return float(pip), float(beta)
+
     @staticmethod
     def from_list(variant1_str: str,
-                  variant2_str: str) -> typing.List["Colocalization"]:
+                  variant2_str: str) -> typing.List["CausalVariant"]:
+        """
+        From two list of causal variants return
+        the list of variants by combining their
+        values to populate the pip's and the
+        beta.
 
-        vars1_index= { x.split(",")[0]:x for x in variant1_str.split(";") }
-        vars2_index= { x.split(",")[0]:x for x in variant2_str.split(";") }
+        :param variant1_str: variant 1
+        :param variant2_str: variatn 2
+        :return: list of causal variatns
+        """
+        vars1_index = {x.split(",")[0]: x for x in variant1_str.split(";")}
+        vars2_index = {x.split(",")[0]: x for x in variant2_str.split(";")}
 
         split = CausalVariant.parse_causal_variant
 
         # list of all variants
-        keys = set([*vars1_index.keys(),*vars2_index.keys()])
+        keys = {*vars1_index.keys(), *vars2_index.keys()}
         # lookup variants in the two indexes
-        keys = map(lambda x : [x,vars1_index.get(x),vars2_index.get(x)],keys)        
-        
-        keys = [ [Variant.from_str(x[0]),nvl(x[1],split),nvl(x[2],split)] for x in keys]
-        keys = [ [*(k[1] or (None,None)),
-                  *(k[2] or (None,None)),
-                  None,
-                  k[0]] for k in keys]
-        
-        causalvariants = [ CausalVariant(*k) for k in keys]
-        print(causalvariants)
-        causalvariants = sorted(causalvariants, key=CausalVariant.sortKey)
-        return causalvariants
-    
-    @staticmethod
+        keys = map(lambda x: [x, vars1_index.get(x), vars2_index.get(x)], keys)
 
-    def columns(prefix : typing.Optional[str] = None) -> typing.List[Column]:
+        keys = [[Variant.from_str(x[0]), nvl(x[1], split), nvl(x[2], split)] for x in keys]
+        keys = [[*(k[1] or (None, None)),
+                 *(k[2] or (None, None)),
+                 None,
+                 k[0]] for k in keys]
+
+        causal_variants = [CausalVariant(*k) for k in keys]
+        causal_variants = sorted(causal_variants, key=CausalVariant.sort_key)
+        return causal_variants
+
+    @staticmethod
+    def columns(prefix: typing.Optional[str] = None) -> typing.List[Column]:
+        """
+        Return the sql alchemy definition of columns to
+        hold a causal variant
+
+        :param prefix: column prefix
+        :return: sqlalchemy column definitions
+        """
         prefix = prefix if prefix is not None else ""
         return [
             Column('{}causal_variant_id'.format(prefix), Integer, primary_key=True, autoincrement=False),
@@ -125,12 +192,13 @@ class CausalVariant(JSONifiable, Kwargs):
 
         :return: tuple (chromosome, start, stop)
         """
-        return self.variant , self.pip1 , self.pip2 , self.beta1 ,self.beta2
+        return self.variant, self.pip1, self.pip2, self.beta1, self.beta2
 
     @staticmethod
     def db_column_names() -> typing.List[str]:
         return [c.name for c in CausalVariant.__attrs_attrs__]
-    
+
+
 @attr.s
 class Colocalization(Kwargs, JSONifiable):
     """
@@ -145,7 +213,7 @@ class Colocalization(Kwargs, JSONifiable):
     """
     source1 = attr.ib(validator=instance_of(str))
     source2 = attr.ib(validator=instance_of(str))
-    
+
     phenotype1 = attr.ib(validator=instance_of(str))
     phenotype1_description = attr.ib(validator=instance_of(str))
 
@@ -172,7 +240,7 @@ class Colocalization(Kwargs, JSONifiable):
 
     variants = attr.ib(validator=attr.validators.deep_iterable(member_validator=instance_of(CausalVariant),
                                                                iterable_validator=instance_of(typing.List)))
-    
+
     colocalization_id = attr.ib(validator=attr.validators.optional(instance_of(int)), default=None)
 
     _IMPORT_COLUMN_NAMES = ('source1',
@@ -198,33 +266,38 @@ class Colocalization(Kwargs, JSONifiable):
                             'len_inter',
                             'vars1_info',
                             'vars2_info')
-    
+
     @staticmethod
     def cvs_column_names() -> typing.List[str]:
+        """
+        List of csv column names
+
+        :return:
+        """
         return list(Colocalization._IMPORT_COLUMN_NAMES)
-    
+
     def kwargs_rep(self) -> typing.Dict[str, typing.Any]:
-        c = {name : getattr(self,name) for name in [ "source1", "source2",
-                                                     "phenotype1", "phenotype1_description",
-                                                     "phenotype2", "phenotype2_description",
-                                                     "quant1", "quant2",
-                                                     "tissue1", "tissue2",
-                                                     "locus_id1", "locus_id2",
-                                                     "locus",
-                                                     "clpp", "clpa",
-                                                     "len_cs1", "len_cs2", "len_inter",
-                                                     "colocalization_id" ] }
-        c["variants"] = list(map(lambda v : CausalVariant(**v.kwargs_rep()),self.variants))
+        c = {name: getattr(self, name) for name in ["source1", "source2",
+                                                    "phenotype1", "phenotype1_description",
+                                                    "phenotype2", "phenotype2_description",
+                                                    "quant1", "quant2",
+                                                    "tissue1", "tissue2",
+                                                    "locus_id1", "locus_id2",
+                                                    "locus",
+                                                    "clpp", "clpa",
+                                                    "len_cs1", "len_cs2", "len_inter",
+                                                    "colocalization_id"]}
+        c["variants"] = list(map(lambda v: CausalVariant(**v.kwargs_rep()), self.variants))
         return c
 
     def json_rep(self):
         d = self.__dict__
         d["locus_id1"] = str(d["locus_id1"]) if self.locus_id1 else None
-        d["locus_id2"] = str(d["locus_id2"]) if self.locus_id2  else None
-        d["cs_size_1"] = sum(map(lambda c : c.count_cs1(), self.variants))
-        d["cs_size_2"] = sum(map(lambda c : c.count_cs2(), self.variants))
+        d["locus_id2"] = str(d["locus_id2"]) if self.locus_id2 else None
+        d["cs_size_1"] = sum(map(lambda c: c.count_cs1(), self.variants))
+        d["cs_size_2"] = sum(map(lambda c: c.count_cs2(), self.variants))
         d["cs_size"] = 0 if self.variants is None else len(self.variants)
-        d["variants"] = list(map(lambda c : c.json_rep(), self.variants))
+        d["variants"] = list(map(lambda c: c.json_rep(), self.variants))
         return d
 
     @staticmethod
@@ -232,7 +305,7 @@ class Colocalization(Kwargs, JSONifiable):
         return [c.name for c in Colocalization.__attrs_attrs__]
 
     @staticmethod
-    def from_list(line: typing.List[str],colocalization_id = None) -> "Colocalization":
+    def from_list(line: typing.List[str], colocalization_id=None) -> "Colocalization":
         """
         Constructor method used to create colocalization from
         a row of data.
@@ -244,6 +317,7 @@ class Colocalization(Kwargs, JSONifiable):
         16..20 beta_id1, beta_id2, variation, vars_pip1, vars_pip2
         21..25 vars_beta1, vars_beta2, len_cs1, len_cs2, len_inter
 
+        :param colocalization_id: colocalization id
         :param line: string array with value
         :return: colocalization object
         """
@@ -255,22 +329,22 @@ class Colocalization(Kwargs, JSONifiable):
 
                                         phenotype1=nvl(line[2], ascii),
                                         phenotype1_description=nvl(line[3], ascii),
-                                        
+
                                         phenotype2=nvl(line[4], ascii),
                                         phenotype2_description=nvl(line[5], ascii),
 
                                         quant1=nvl(line[6], str),
                                         quant2=nvl(line[7], str),
-                                        
+
                                         tissue1=nvl(line[8], str),
                                         tissue2=nvl(line[9], str),
-                                        
+
                                         locus_id1=nvl(line[10], Variant.from_str),
                                         locus_id2=nvl(line[11], Variant.from_str),
 
-                                        locus = Locus(nvl(line[12], string_to_chromosome), # chromosome
-                                                      nvl(line[13], na(int)), # start
-                                                      nvl(line[14], na(int))), # stop
+                                        locus=Locus(nvl(line[12], string_to_chromosome),  # chromosome
+                                                    nvl(line[13], na(int)),  # start
+                                                    nvl(line[14], na(int))),  # stop
 
                                         clpp=nvl(line[15], float),
                                         clpa=nvl(line[16], float),
@@ -278,46 +352,46 @@ class Colocalization(Kwargs, JSONifiable):
                                         len_cs1=nvl(line[18], na(int)),
                                         len_cs2=nvl(line[19], na(int)),
                                         len_inter=nvl(line[20], na(int)),
-                                        
-                                        variants = variants,
 
-                                        colocalization_id = colocalization_id
-        )
+                                        variants=variants,
+
+                                        colocalization_id=colocalization_id
+                                        )
         return colocalization
 
     @staticmethod
-    def from_str(text: typing.List[str], delimiter = "\t") -> "Colocalization":
+    def from_str(text: str, delimiter="\t") -> "Colocalization":
         line = text.split(delimiter)
         return Colocalization.from_list(line)
 
     @staticmethod
-    def columns(prefix : typing.Optional[str] = None) -> typing.List[Column]:
+    def columns(prefix: typing.Optional[str] = None) -> typing.List[Column]:
         prefix = prefix if prefix is not None else ""
-        return [ Column('{}colocalization_id'.format(prefix), Integer, primary_key=True, autoincrement=False),
-                 Column('{}source1'.format(prefix), String(80), unique=False, nullable=False),
-                 Column('{}source2'.format(prefix), String(80), unique=False, nullable=False),
-                 Column('{}phenotype1'.format(prefix), String(1000), unique=False, nullable=False),
-                 Column('{}phenotype1_description'.format(prefix), String(1000), unique=False, nullable=False),
-                 Column('{}phenotype2'.format(prefix), String(1000), unique=False, nullable=False),
-                 Column('{}phenotype2_description'.format(prefix), String(1000), unique=False, nullable=False),
+        return [Column('{}colocalization_id'.format(prefix), Integer, primary_key=True, autoincrement=False),
+                Column('{}source1'.format(prefix), String(80), unique=False, nullable=False),
+                Column('{}source2'.format(prefix), String(80), unique=False, nullable=False),
+                Column('{}phenotype1'.format(prefix), String(1000), unique=False, nullable=False),
+                Column('{}phenotype1_description'.format(prefix), String(1000), unique=False, nullable=False),
+                Column('{}phenotype2'.format(prefix), String(1000), unique=False, nullable=False),
+                Column('{}phenotype2_description'.format(prefix), String(1000), unique=False, nullable=False),
 
-                 Column('{}quant1'.format(prefix), String(80), unique=False, nullable=True),
-                 Column('{}quant2'.format(prefix), String(80), unique=False, nullable=True),
-                 
-                 Column('{}tissue1'.format(prefix), String(80), unique=False, nullable=True),
-                 Column('{}tissue2'.format(prefix), String(80), unique=False, nullable=True),
+                Column('{}quant1'.format(prefix), String(80), unique=False, nullable=True),
+                Column('{}quant2'.format(prefix), String(80), unique=False, nullable=True),
 
-                 # locus_id1
-                 *Variant.columns('{}locus_id1_'.format(prefix)),
-                 # locus_id2
-                 *Variant.columns('{}locus_id2_'.format(prefix)),
+                Column('{}tissue1'.format(prefix), String(80), unique=False, nullable=True),
+                Column('{}tissue2'.format(prefix), String(80), unique=False, nullable=True),
 
-                 # locus
-                 *Locus.columns(''),
+                # locus_id1
+                *Variant.columns('{}locus_id1_'.format(prefix)),
+                # locus_id2
+                *Variant.columns('{}locus_id2_'.format(prefix)),
 
-                 Column('{}clpp'.format(prefix), Float, unique=False, nullable=False),
-                 Column('{}clpa'.format(prefix), Float, unique=False, nullable=False),
+                # locus
+                *Locus.columns(''),
 
-                 Column('{}len_cs1'.format(prefix), Integer, unique=False, nullable=False),
-                 Column('{}len_cs2'.format(prefix), Integer, unique=False, nullable=False),
-                 Column('{}len_inter'.format(prefix), Integer, unique=False, nullable=False) ]
+                Column('{}clpp'.format(prefix), Float, unique=False, nullable=False),
+                Column('{}clpa'.format(prefix), Float, unique=False, nullable=False),
+
+                Column('{}len_cs1'.format(prefix), Integer, unique=False, nullable=False),
+                Column('{}len_cs2'.format(prefix), Integer, unique=False, nullable=False),
+                Column('{}len_inter'.format(prefix), Integer, unique=False, nullable=False)]

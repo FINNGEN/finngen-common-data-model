@@ -8,15 +8,17 @@ from sqlalchemy import Table, MetaData, create_engine, Column, Integer, String, 
 import re
 from .data import JSONifiable, Kwargs
 
+CHROMOSOME_MAP = {'X': 23, 'Y': 24, 'M': 25, 'MT': 25,
+                  '1': 1, '2': 2, '3': 3, '4': 4, '5': 5,
+                  '6': 6, '7': 7, '8': 8, '9': 9, '10': 10,
+                  '11': 11, '12': 12, '13': 13, '14': 14, '15': 15,
+                  '16': 16, '17': 17, '18': 18, '19': 19, '20': 20,
+                  '21': 21, '22': 22, '23': 23, '24': 24, '25': 25}
 
-CHROMOSOME_MAP = { 'X' : 23  , 'Y'  : 24 , 'M'  : 25  , 'MT' : 25  ,
-                   '1' : 1   , '2'  : 2  , '3'  : 3   , '4'  : 4   , '5' : 5   ,
-                   '6' : 6   , '7'  : 7  , '8'  : 8   , '9'  : 9   , '10' : 10 ,
-                   '11' : 11 , '12' : 12 , '13' : 13  , '14' : 14  , '15' : 15 ,
-                   '16' : 16 , '17' : 17 , '18' : 18  , '19' : 19  , '20' : 20 ,
-                   '21' : 21 , '22' : 22 , '23' : 23  , '24' : 24  , '25' : 25 }
+
 def string_to_chromosome(chromosome):
     return CHROMOSOME_MAP[chromosome]
+
 
 # Variant
 @attr.s(frozen=True)
@@ -27,14 +29,15 @@ class Variant(JSONifiable, Kwargs):
 
     """
     chromosome = attr.ib(validator=instance_of(int))
+
     @chromosome.validator
     def chromosome_in_range(self, attribute, value):
         if not 1 <= value < 26:
             raise ValueError("value out of bounds")
+
     position = attr.ib(validator=instance_of(int))
     reference = attr.ib(validator=instance_of(str))
     alternate = attr.ib(validator=instance_of(str))
-
 
     PARSER = re.compile(r'''^(chr)?
                              (?P<chromosome>( M | MT | X | Y |
@@ -56,6 +59,7 @@ class Variant(JSONifiable, Kwargs):
                              (?P<alternate>( \<[^\>]{1,998}\>
                                            | [ATGC]{1,1000} ))$
                         ''', re.VERBOSE)
+
     @staticmethod
     def from_str(text: str) -> typing.Optional["Variant"]:
         fragments = Variant.PARSER.match(text)
@@ -76,7 +80,7 @@ class Variant(JSONifiable, Kwargs):
                                                                         position=self.position,
                                                                         reference=self.reference,
                                                                         alternate=self.alternate)
-    
+
     def json_rep(self):
         return self.__dict__
 
@@ -84,20 +88,19 @@ class Variant(JSONifiable, Kwargs):
         return self.__dict__
 
     @staticmethod
-    def sortKey(v):
+    def sort_key(v):
         return (v.chromosome,
                 v.position,
                 v.reference,
                 v.alternate)
-        
-    @staticmethod
-    def columns(prefix : typing.Optional[str] = None, primary_key=False, nullable=False) -> typing.List[Column]:
-        prefix = prefix if prefix is not None else ""
-        return [ Column('{}chromosome'.format(prefix), Integer, primary_key=primary_key, nullable=nullable),
-                 Column('{}position'.format(prefix), Integer, primary_key=primary_key, nullable=nullable),
-                 Column('{}ref'.format(prefix), String(1000), primary_key=primary_key, nullable=nullable),
-                 Column('{}alt'.format(prefix), String(1000), primary_key=primary_key, nullable=nullable), ]
 
+    @staticmethod
+    def columns(prefix: typing.Optional[str] = None, primary_key=False, nullable=False) -> typing.List[Column]:
+        prefix = prefix if prefix is not None else ""
+        return [Column('{}chromosome'.format(prefix), Integer, primary_key=primary_key, nullable=nullable),
+                Column('{}position'.format(prefix), Integer, primary_key=primary_key, nullable=nullable),
+                Column('{}ref'.format(prefix), String(1000), primary_key=primary_key, nullable=nullable),
+                Column('{}alt'.format(prefix), String(1000), primary_key=primary_key, nullable=nullable), ]
 
     def __composite_values__(self):
         """
@@ -120,10 +123,12 @@ class Locus(JSONifiable, Kwargs):
         stop: end of range
     """
     chromosome = attr.ib(validator=attr.validators.and_(instance_of(int)))
+
     @chromosome.validator
     def chromosome_in_range(self, attribute, value):
         if not 1 <= value < 26:
             raise ValueError("value out of bounds")
+
     start = attr.ib(validator=instance_of(int))
     stop = attr.ib(validator=instance_of(int))
 
@@ -153,9 +158,8 @@ class Locus(JSONifiable, Kwargs):
         if fragments is None:
             raise Exception(text)
         else:
-            chromosome=string_to_chromosome(fragments.group('chromosome'))
-            start=int(fragments.group('start'))
-            stop=int(fragments.group('stop'))
+            start = int(fragments.group('start'))
+            stop = int(fragments.group('stop'))
             if start > stop:
                 raise Exception(text)
             else:
@@ -164,12 +168,12 @@ class Locus(JSONifiable, Kwargs):
                              stop=stop)
 
     @staticmethod
-    def sortKey(l):
-        return (l.chromosome,
-                l.position,
-                l.start,
-                l.stop)
-            
+    def sort_key(locus):
+        return (locus.chromosome,
+                locus.position,
+                locus.start,
+                locus.stop)
+
     def __str__(self):
         """
 
@@ -186,11 +190,11 @@ class Locus(JSONifiable, Kwargs):
         return self.__dict__
 
     @staticmethod
-    def columns(prefix : typing.Optional[str] = None) -> typing.List[Column]:
+    def columns(prefix: typing.Optional[str] = None) -> typing.List[Column]:
         prefix = prefix if prefix is not None else ""
-        return [ Column('{}chromosome'.format(prefix), Integer, unique=False, nullable=False),
-                 Column('{}start'.format(prefix), Integer, unique=False, nullable=False),
-                 Column('{}stop'.format(prefix), Integer, unique=False, nullable=False) ]
+        return [Column('{}chromosome'.format(prefix), Integer, unique=False, nullable=False),
+                Column('{}start'.format(prefix), Integer, unique=False, nullable=False),
+                Column('{}stop'.format(prefix), Integer, unique=False, nullable=False)]
 
     def __composite_values__(self):
         """
@@ -200,4 +204,3 @@ class Locus(JSONifiable, Kwargs):
         :return: tuple (chromosome, start, stop)
         """
         return self.chromosome, self.start, self.stop
-
