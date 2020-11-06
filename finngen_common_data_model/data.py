@@ -4,7 +4,8 @@ import typing
 X = typing.TypeVar('X')
 
 
-def nvl(value: str, f: typing.Callable[[str], X]) -> typing.Optional[X]:
+def nvl(value: typing.Optional[str],
+        f: typing.Callable[[str], X]) -> typing.Optional[X]:
     """
     Wrapper to convert strings to a given type, where the
     empty string, or None is returned as None.

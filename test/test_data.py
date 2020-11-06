@@ -1,5 +1,6 @@
 from finngen_common_data_model.data import *
 
+
 def test_na():
     assert (na(str))("") == ""
     assert (na(str))("na") is None
