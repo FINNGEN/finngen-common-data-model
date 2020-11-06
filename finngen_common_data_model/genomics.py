@@ -76,23 +76,20 @@ class Variant(JSONifiable, Kwargs):
                                                                         position=self.position,
                                                                         reference=self.reference,
                                                                         alternate=self.alternate)
-
-
-    # def __hash__(self):
-    #     hash((self.position,self.reference,self.alternate))
-
-    # def __eq__(self,other):
-    #     self.__class__ == other.__class__ and self.position == other.position and self.reference == other.reference and self.alternate == other.alternate
-
-    # def __ne__(self,other):
-    #     not self.__eq(other)
-
+    
     def json_rep(self):
         return self.__dict__
 
     def kwargs_rep(self) -> typing.Dict[str, typing.Any]:
         return self.__dict__
 
+    @staticmethod
+    def sortKey(v):
+        return (v.chromosome,
+                v.position,
+                v.reference,
+                v.alternate)
+        
     @staticmethod
     def columns(prefix : typing.Optional[str] = None, primary_key=False, nullable=False) -> typing.List[Column]:
         prefix = prefix if prefix is not None else ""
@@ -166,6 +163,13 @@ class Locus(JSONifiable, Kwargs):
                              start=start,
                              stop=stop)
 
+    @staticmethod
+    def sortKey(l):
+        return (l.chromosome,
+                l.position,
+                l.start,
+                l.stop)
+            
     def __str__(self):
         """
 

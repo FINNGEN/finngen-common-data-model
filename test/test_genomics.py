@@ -98,3 +98,9 @@ def test_structural_variants_2():
     variant = "chr9_96792507_<INS:ME:ALU>_<INS:ME:ALU>"
     actual = str(Variant.from_str(variant))
     assert expected == actual
+
+def test_order_key():
+    acutal = map(Variant.from_str,["1:2:A:G","10:20:A:G","3:4:C:A","3:4:C:G","1:2:A:A"])    
+    actual = sorted(list(acutal),key=Variant.sortKey)
+    expected = list(map(Variant.from_str,["1:2:A:A","1:2:A:G","3:4:C:A","3:4:C:G","10:20:A:G"]))
+    assert expected == actual

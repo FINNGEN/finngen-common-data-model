@@ -12,4 +12,9 @@ setup(name='finngen_common_data_model',
       tests_require=['pytest', 'tox', 'pytest-cov', ],
       install_requires=[ 'attrs>=19.3.0',
                          'SQLAlchemy>=1.3.18',
-                         'pytest>=5.4.3' ])
+                         'pytest>=5.4.3' ],
+      extras_require={
+          'dev': ['pytest>=6.1.2', 'pytest-cov>=2.10.1', ],
+      }
+
+)

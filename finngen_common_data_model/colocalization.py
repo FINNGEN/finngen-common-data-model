@@ -17,20 +17,24 @@ class CausalVariant(JSONifiable, Kwargs):
     pip2, beta2
 
     """
-    variant = attr.ib(validator=attr.validators.optional(instance_of(Variant)))
-    
     pip1 = attr.ib(validator=attr.validators.optional(instance_of(float)))
     beta1 = attr.ib(validator=attr.validators.optional(instance_of(float)))
     
     pip2 = attr.ib(validator=attr.validators.optional(instance_of(float)))
     beta2 = attr.ib(validator=attr.validators.optional(instance_of(float)))
 
-    id = attr.ib(validator=attr.validators.optional(instance_of(int)), default=None)
+    causal_variant_id = attr.ib(validator=attr.validators.optional(instance_of(int)), default=None)
+    
+    variant = attr.ib(instance_of(Variant))
     
     # id : note this is skipped as it is managed by SQL Alchemy
+
+    @staticmethod
+    def sortKey(c):
+        return Variant.sortKey(c.variant)
     
     def kwargs_rep(self) -> typing.Dict[str, typing.Any]:
-        return {x: self.__dict__[x] for x in ["variant", "pip1", "beta1" , "pip2", "beta2" ] }
+        return {x: self.__dict__[x] for x in ["variant", "pip1", "beta1" , "pip2", "beta2", "causal_variant_id" ] }
 
     def json_rep(self):
         d = self.__dict__
@@ -90,11 +94,14 @@ class CausalVariant(JSONifiable, Kwargs):
         keys = map(lambda x : [x,vars1_index.get(x),vars2_index.get(x)],keys)        
         
         keys = [ [Variant.from_str(x[0]),nvl(x[1],split),nvl(x[2],split)] for x in keys]
-        keys = [ [k[0],
-                  *(k[1] or (None,None)),
-                  *(k[2] or (None,None))] for k in keys]
+        keys = [ [*(k[1] or (None,None)),
+                  *(k[2] or (None,None)),
+                  None,
+                  k[0]] for k in keys]
         
         causalvariants = [ CausalVariant(*k) for k in keys]
+        print(causalvariants)
+        causalvariants = sorted(causalvariants, key=CausalVariant.sortKey)
         return causalvariants
     
     @staticmethod
@@ -102,7 +109,7 @@ class CausalVariant(JSONifiable, Kwargs):
     def columns(prefix : typing.Optional[str] = None) -> typing.List[Column]:
         prefix = prefix if prefix is not None else ""
         return [
-            Column('{}id'.format(prefix), Integer, primary_key=True, autoincrement=False),
+            Column('{}causal_variant_id'.format(prefix), Integer, primary_key=True, autoincrement=False),
             Column('{}pip1'.format(prefix), Float, unique=False, nullable=True),
             Column('{}pip2'.format(prefix), Float, unique=False, nullable=True),
             Column('{}beta1'.format(prefix), Float, unique=False, nullable=True),
@@ -166,7 +173,7 @@ class Colocalization(Kwargs, JSONifiable):
     variants = attr.ib(validator=attr.validators.deep_iterable(member_validator=instance_of(CausalVariant),
                                                                iterable_validator=instance_of(typing.List)))
     
-    id = attr.ib(validator=attr.validators.optional(instance_of(int)), default=None)
+    colocalization_id = attr.ib(validator=attr.validators.optional(instance_of(int)), default=None)
 
     _IMPORT_COLUMN_NAMES = ('source1',
                             'source2',
@@ -206,7 +213,7 @@ class Colocalization(Kwargs, JSONifiable):
                                                      "locus",
                                                      "clpp", "clpa",
                                                      "len_cs1", "len_cs2", "len_inter",
-                                                     "id" ] }
+                                                     "colocalization_id" ] }
         c["variants"] = list(map(lambda v : CausalVariant(**v.kwargs_rep()),self.variants))
         return c
 
@@ -225,7 +232,7 @@ class Colocalization(Kwargs, JSONifiable):
         return [c.name for c in Colocalization.__attrs_attrs__]
 
     @staticmethod
-    def from_list(line: typing.List[str],id = None) -> "Colocalization":
+    def from_list(line: typing.List[str],colocalization_id = None) -> "Colocalization":
         """
         Constructor method used to create colocalization from
         a row of data.
@@ -274,7 +281,7 @@ class Colocalization(Kwargs, JSONifiable):
                                         
                                         variants = variants,
 
-                                        id = id
+                                        colocalization_id = colocalization_id
         )
         return colocalization
 
@@ -286,7 +293,7 @@ class Colocalization(Kwargs, JSONifiable):
     @staticmethod
     def columns(prefix : typing.Optional[str] = None) -> typing.List[Column]:
         prefix = prefix if prefix is not None else ""
-        return [ Column('{}id'.format(prefix), Integer, primary_key=True, autoincrement=False),
+        return [ Column('{}colocalization_id'.format(prefix), Integer, primary_key=True, autoincrement=False),
                  Column('{}source1'.format(prefix), String(80), unique=False, nullable=False),
                  Column('{}source2'.format(prefix), String(80), unique=False, nullable=False),
                  Column('{}phenotype1'.format(prefix), String(1000), unique=False, nullable=False),
