@@ -17,6 +17,8 @@ class CausalVariant(JSONifiable, Kwargs):
     pip2, beta2
 
     """
+    rel = attr.ib(validator=instance_of(str))
+    
     pip1 = attr.ib(validator=attr.validators.optional(instance_of(float)))
     beta1 = attr.ib(validator=attr.validators.optional(instance_of(float)))
 
@@ -47,7 +49,13 @@ class CausalVariant(JSONifiable, Kwargs):
 
         :return: kwargs
         """
-        return {x: self.__dict__[x] for x in ["variant", "pip1", "beta1", "pip2", "beta2", "causal_variant_id"]}
+        return {x: self.__dict__[x] for x in ["rel",
+                                              "variant",
+                                              "pip1",
+                                              "beta1",
+                                              "pip2",
+                                              "beta2",
+                                              "causal_variant_id"]}
 
     def json_rep(self):
         """
@@ -133,7 +141,8 @@ class CausalVariant(JSONifiable, Kwargs):
         return float(pip), float(beta)
 
     @staticmethod
-    def from_list(variant1_str: str,
+    def from_list(rel : str,
+                  variant1_str: str,
                   variant2_str: str) -> typing.List["CausalVariant"]:
         """
         From two list of causal variants return
@@ -156,7 +165,8 @@ class CausalVariant(JSONifiable, Kwargs):
         keys = map(lambda x: [x, vars1_index.get(x), vars2_index.get(x)], keys)
 
         keys = [[Variant.from_str(x[0]), nvl(x[1], split), nvl(x[2], split)] for x in keys]
-        keys = [[*(k[1] or (None, None)),
+        keys = [[rel,
+                 *(k[1] or (None, None)),
                  *(k[2] or (None, None)),
                  None,
                  k[0]] for k in keys]
@@ -176,6 +186,7 @@ class CausalVariant(JSONifiable, Kwargs):
         """
         prefix = prefix if prefix is not None else ""
         return [
+            Column('{}rel'.format(prefix), SmallInteger, unique=False, nullable=False),
             Column('{}causal_variant_id'.format(prefix), Integer, primary_key=True, autoincrement=False),
             Column('{}pip1'.format(prefix), Float, unique=False, nullable=True),
             Column('{}pip2'.format(prefix), Float, unique=False, nullable=True),
@@ -211,6 +222,8 @@ class Colocalization(Kwargs, JSONifiable):
     how data is loaded.
 
     """
+    rel = attr.ib(validator=instance_of(str))
+    
     source1 = attr.ib(validator=instance_of(str))
     source2 = attr.ib(validator=instance_of(str))
 
@@ -277,7 +290,8 @@ class Colocalization(Kwargs, JSONifiable):
         return list(Colocalization._IMPORT_COLUMN_NAMES)
 
     def kwargs_rep(self) -> typing.Dict[str, typing.Any]:
-        c = {name: getattr(self, name) for name in ["source1", "source2",
+        c = {name: getattr(self, name) for name in ["rel",
+                                                    "source1", "source2",
                                                     "phenotype1", "phenotype1_description",
                                                     "phenotype2", "phenotype2_description",
                                                     "quant1", "quant2",
@@ -305,7 +319,9 @@ class Colocalization(Kwargs, JSONifiable):
         return [c.name for c in Colocalization.__attrs_attrs__]
 
     @staticmethod
-    def from_list(line: typing.List[str], colocalization_id=None) -> "Colocalization":
+    def from_list(rel : str,
+                  line: typing.List[str],
+                  colocalization_id=None) -> "Colocalization":
         """
         Constructor method used to create colocalization from
         a row of data.
@@ -321,10 +337,13 @@ class Colocalization(Kwargs, JSONifiable):
         :param line: string array with value
         :return: colocalization object
         """
-        variants = CausalVariant.from_list(nvl(line[21], str),
+        variants = CausalVariant.from_list(rel,
+                                           nvl(line[21], str),
                                            nvl(line[22], str))
 
-        colocalization = Colocalization(source1=nvl(line[0], str),
+        colocalization = Colocalization(rel = rel,
+                                        
+                                        source1=nvl(line[0], str),
                                         source2=nvl(line[1], str),
 
                                         phenotype1=nvl(line[2], only_ascii),
@@ -355,19 +374,20 @@ class Colocalization(Kwargs, JSONifiable):
 
                                         variants=variants,
 
-                                        colocalization_id=colocalization_id
-                                        )
+                                        colocalization_id=colocalization_id)
         return colocalization
 
     @staticmethod
-    def from_str(text: str, delimiter="\t") -> "Colocalization":
+    def from_str(rel : str, text: str, delimiter="\t") -> "Colocalization":
         line = text.split(delimiter)
-        return Colocalization.from_list(line)
+        return Colocalization.from_list(rel, line)
 
     @staticmethod
     def columns(prefix: typing.Optional[str] = None) -> typing.List[Column]:
         prefix = prefix if prefix is not None else ""
-        return [Column('{}colocalization_id'.format(prefix), Integer, primary_key=True, autoincrement=False),
+        return [Column('{}rel'.format(prefix), SmallInteger, unique=False, nullable=False),
+                           
+                Column('{}colocalization_id'.format(prefix), Integer, primary_key=True, autoincrement=False),
                 Column('{}source1'.format(prefix), String(80), unique=False, nullable=False),
                 Column('{}source2'.format(prefix), String(80), unique=False, nullable=False),
                 Column('{}phenotype1'.format(prefix), String(1000), unique=False, nullable=False),

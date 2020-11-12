@@ -1,10 +1,11 @@
 from finngen_common_data_model.genomics import Locus, Variant
 import attr
-
+import uuid
 from finngen_common_data_model.colocalization import Colocalization as BaseColocalization, \
     CausalVariant as BaseCausalVariant
 from finngen_common_data_model.genomics import Locus, Variant
 
+rel = str(uuid.uuid4())
 
 @attr.s(frozen=True, slots=True)
 class Colocalization(BaseColocalization):
@@ -22,10 +23,10 @@ def test_parse_causal_variant():
     assert expected == actual
 
 
-causal_variants = [CausalVariant(0.1, 0.11, 0.2, 0.22, None, Variant.from_str("1_1_A_G")),
-                   CausalVariant(0.1, 0.11, None, None, None, Variant.from_str("1_1_A_G")),
-                   CausalVariant(None, None, 0.2, 0.22, None, Variant.from_str("1_1_A_G")),
-                   CausalVariant(None, None, None, None, None, Variant.from_str("1_1_A_G"))]
+causal_variants = [CausalVariant("rel-a",0.1, 0.11, 0.2, 0.22, None, Variant.from_str("1_1_A_G")),
+                   CausalVariant("rel-a",0.1, 0.11, None, None, None, Variant.from_str("1_1_A_G")),
+                   CausalVariant("rel-a",None, None, 0.2, 0.22, None, Variant.from_str("1_1_A_G")),
+                   CausalVariant("rel-a",None, None, None, None, None, Variant.from_str("1_1_A_G"))]
 
 
 def test_has_cs1():
@@ -66,13 +67,13 @@ def test_membership_cs():
 
 def test_causal_variants_kwargs_rep():
     actual = list(map(lambda c: c.kwargs_rep(), causal_variants))
-    expected = [{'beta1': 0.11, 'beta2': 0.22, 'pip1': 0.1, 'pip2': 0.2,
+    expected = [{ 'rel': 'rel-a', 'beta1': 0.11, 'beta2': 0.22, 'pip1': 0.1, 'pip2': 0.2,
                  'variant': Variant(chromosome=1, position=1, reference='A', alternate='G'), 'causal_variant_id': None},
-                {'beta1': 0.11, 'beta2': None, 'pip1': 0.1, 'pip2': None,
+                { 'rel': 'rel-a', 'beta1': 0.11, 'beta2': None, 'pip1': 0.1, 'pip2': None,
                  'variant': Variant(chromosome=1, position=1, reference='A', alternate='G'), 'causal_variant_id': None},
-                {'beta1': None, 'beta2': 0.22, 'pip1': None, 'pip2': 0.2,
+                { 'rel': 'rel-a', 'beta1': None, 'beta2': 0.22, 'pip1': None, 'pip2': 0.2,
                  'variant': Variant(chromosome=1, position=1, reference='A', alternate='G'), 'causal_variant_id': None},
-                {'beta1': None, 'beta2': None, 'pip1': None, 'pip2': None,
+                { 'rel': 'rel-a', 'beta1': None, 'beta2': None, 'pip1': None, 'pip2': None,
                  'variant': Variant(chromosome=1, position=1, reference='A', alternate='G'), 'causal_variant_id': None}]
     assert expected == actual
 
@@ -80,13 +81,13 @@ def test_causal_variants_kwargs_rep():
 def test_json_rep():
     actual = list(map(lambda c: c.json_rep(), causal_variants))
     expected = [
-        {'beta1': 0.11, 'beta2': 0.22, 'count_cs': 2, 'membership_cs': 'Both', 'pip1': 0.1, 'pip2': 0.2, 'position': 1,
+        { 'rel': 'rel-a', 'beta1': 0.11, 'beta2': 0.22, 'count_cs': 2, 'membership_cs': 'Both', 'pip1': 0.1, 'pip2': 0.2, 'position': 1,
          'variant': '1:1:A:G', 'causal_variant_id': None},
-        {'beta1': 0.11, 'beta2': None, 'count_cs': 1, 'membership_cs': 'CS1', 'pip1': 0.1, 'pip2': None, 'position': 1,
+        { 'rel': 'rel-a', 'beta1': 0.11, 'beta2': None, 'count_cs': 1, 'membership_cs': 'CS1', 'pip1': 0.1, 'pip2': None, 'position': 1,
          'variant': '1:1:A:G', 'causal_variant_id': None},
-        {'beta1': None, 'beta2': 0.22, 'count_cs': 1, 'membership_cs': 'CS2', 'pip1': None, 'pip2': 0.2, 'position': 1,
+        { 'rel': 'rel-a', 'beta1': None, 'beta2': 0.22, 'count_cs': 1, 'membership_cs': 'CS2', 'pip1': None, 'pip2': 0.2, 'position': 1,
          'variant': '1:1:A:G', 'causal_variant_id': None},
-        {'beta1': None, 'beta2': None, 'count_cs': 0, 'membership_cs': 'None', 'pip1': None, 'pip2': None,
+        { 'rel': 'rel-a', 'beta1': None, 'beta2': None, 'count_cs': 0, 'membership_cs': 'None', 'pip1': None, 'pip2': None,
          'position': 1, 'variant': '1:1:A:G', 'causal_variant_id': None}]
     assert expected == actual
 
@@ -95,38 +96,135 @@ def test_causal_variant_from_list_1():
     vars1_info = "1_1_A_A,0.02,0.19;1_1_A_G,0.01,0.12;1_1_C_A,0.03,0.18;1_1_C_T,0.05,0.15;1_1_G_G,0.02,0.19;1_1_G_T,0.04,0.49;1_1_T_C,0.04,0.19;1_1_T_G,0.03,0.17"
     vars2_info = "1_1_G_A,0.01,0.19;1_1_T_C,0.02,0.12;1_1_C_G,0.65,0.19"
     expected = {
-        CausalVariant(variant=Variant(chromosome=1, position=1, reference='A', alternate='A'), pip1=0.02, beta1=0.19,
-                      pip2=None, beta2=None),
-        CausalVariant(variant=Variant(chromosome=1, position=1, reference='A', alternate='G'), pip1=0.01, beta1=0.12,
-                      pip2=None, beta2=None),
-        CausalVariant(variant=Variant(chromosome=1, position=1, reference='C', alternate='A'), pip1=0.03, beta1=0.18,
-                      pip2=None, beta2=None),
-        CausalVariant(variant=Variant(chromosome=1, position=1, reference='C', alternate='G'), pip1=None, beta1=None,
-                      pip2=0.65, beta2=0.19),
-        CausalVariant(variant=Variant(chromosome=1, position=1, reference='C', alternate='T'), pip1=0.05, beta1=0.15,
-                      pip2=None, beta2=None),
-        CausalVariant(variant=Variant(chromosome=1, position=1, reference='G', alternate='A'), pip1=None, beta1=None,
-                      pip2=0.01, beta2=0.19),
-        CausalVariant(variant=Variant(chromosome=1, position=1, reference='G', alternate='G'), pip1=0.02, beta1=0.19,
-                      pip2=None, beta2=None),
-        CausalVariant(variant=Variant(chromosome=1, position=1, reference='G', alternate='T'), pip1=0.04, beta1=0.49,
-                      pip2=None, beta2=None),
-        CausalVariant(variant=Variant(chromosome=1, position=1, reference='T', alternate='C'), pip1=0.04, beta1=0.19,
-                      pip2=0.02, beta2=0.12),
-        CausalVariant(variant=Variant(chromosome=1, position=1, reference='T', alternate='G'), pip1=0.03, beta1=0.17,
-                      pip2=None, beta2=None),
+        CausalVariant(rel=rel,
+                      variant=Variant(chromosome=1,
+                                      position=1,
+                                      reference='A',
+                                      alternate='A'),
+                      pip1=0.02,
+                      beta1=0.19,
+                      pip2=None,
+                      beta2=None),
+        
+        CausalVariant(rel=rel,
+                      variant=Variant(chromosome=1,
+                                      position=1,
+                                      reference='A',
+                                      alternate='G'),
+                      pip1=0.01,
+                      beta1=0.12,
+                      pip2=None,
+                      beta2=None),
+        
+        CausalVariant(rel=rel,        
+                      variant=Variant(chromosome=1,
+                                      position=1,
+                                      reference='C',
+                                      alternate='A'),
+                      pip1=0.03,
+                      beta1=0.18,
+                      pip2=None,
+                      beta2=None),
+
+        CausalVariant(rel=rel,        
+                      variant=Variant(chromosome=1,
+                                      position=1,
+                                      reference='C',
+                                      alternate='G'),
+                      pip1=None,
+                      beta1=None,
+                      pip2=0.65,
+                      beta2=0.19),
+
+        CausalVariant(rel=rel,
+                      variant=Variant(chromosome=1,
+                                      position=1,
+                                      reference='C',
+                                      alternate='T'),
+                      pip1=0.05,
+                      beta1=0.15,
+                      pip2=None,
+                      beta2=None),
+
+        CausalVariant(rel=rel,
+                      variant=Variant(chromosome=1,
+                                      position=1,
+                                      reference='G',
+                                      alternate='A'),
+                      pip1=None,
+                      beta1=None,
+                      pip2=0.01,
+                      beta2=0.19),
+
+        CausalVariant(rel=rel,
+                      variant=Variant(chromosome=1,
+                                      position=1,
+                                      reference='G',
+                                      alternate='G'),
+                      pip1=0.02,
+                      beta1=0.19,
+                      pip2=None,
+                      beta2=None),
+
+        CausalVariant(rel=rel,
+                      variant=Variant(chromosome=1,
+                                      position=1,
+                                      reference='G',
+                                      alternate='T'),
+                      pip1=0.04,
+                      beta1=0.49,
+                      pip2=None,
+                      beta2=None),
+        
+        CausalVariant(rel=rel,        
+                      variant=Variant(chromosome=1,
+                                      position=1,
+                                      reference='T',
+                                      alternate='C'),
+                      pip1=0.04,
+                      beta1=0.19,
+                      pip2=0.02,
+                      beta2=0.12),
+
+        CausalVariant(rel=rel,        
+                      variant=Variant(chromosome=1,
+                                      position=1,
+                                      reference='T',
+                                      alternate='G'),
+                      pip1=0.03,
+                      beta1=0.17,
+                      pip2=None,
+                      beta2=None),
     }
-    actual = CausalVariant.from_list(vars1_info, vars2_info)
+    actual = CausalVariant.from_list(rel,vars1_info, vars2_info)
     actual = set(map(lambda c: CausalVariant(**c.kwargs_rep()), actual))
     assert expected == actual
 
 
 def test_colocalization_kwargs_rep():
-    variants = [BaseCausalVariant(variant=Variant(chromosome=1, position=1, reference='G', alternate='A'), pip1=None,
-                                  beta1=None, pip2=0.01, beta2=0.19, causal_variant_id=None),
-                BaseCausalVariant(variant=Variant(chromosome=1, position=1, reference='A', alternate='A'), pip1=0.02,
-                                  beta1=0.19, pip2=None, beta2=None, causal_variant_id=None)]
-    expected = {'colocalization_id': 5,
+    variants = [BaseCausalVariant(rel=rel,
+                                  variant=Variant(chromosome=1,
+                                                  position=1,
+                                                  reference='G',
+                                                  alternate='A'),
+                                  pip1=None,
+                                  beta1=None,
+                                  pip2=0.01,
+                                  beta2=0.19,
+                                  causal_variant_id=None),
+                BaseCausalVariant(rel=rel,
+                                  variant=Variant(chromosome=1,
+                                                  position=1,
+                                                  reference='A',
+                                                  alternate='A'),
+                                  pip1=0.02,
+                                  beta1=0.19,
+                                  pip2=None,
+                                  beta2=None,
+                                  causal_variant_id=None)]
+    
+    expected = {'rel' : rel,
+                'colocalization_id': 5,
                 'clpa': 11.0,
                 'clpp': 10.0,
                 'len_cs1': 1,
@@ -147,7 +245,9 @@ def test_colocalization_kwargs_rep():
                 'tissue2': 'tissue2',
                 'variants': variants}
 
-    colocalization = Colocalization(colocalization_id=5,
+    colocalization = Colocalization(rel=rel,
+                                    
+                                    colocalization_id=5,
 
                                     source1='source1',
                                     source2='source2',
@@ -227,7 +327,9 @@ def test_colocalization_1():
               "1_1_G_A,0.01,0.19",
               ]
 
-    expected = BaseColocalization(source1='source1',
+    expected = BaseColocalization(rel=rel,
+
+                                  source1='source1',
                                   source2='source2',
 
                                   phenotype1='phenotype1',
@@ -262,7 +364,8 @@ def test_colocalization_1():
                                   len_cs2=2,
 
                                   len_inter=3,
-                                  variants=[BaseCausalVariant(variant=Variant(chromosome=1,
+                                  variants=[BaseCausalVariant(rel=rel,
+                                                              variant=Variant(chromosome=1,
                                                                               position=1,
                                                                               reference='A',
                                                                               alternate='A'),
@@ -270,7 +373,8 @@ def test_colocalization_1():
                                                               beta1=0.19,
                                                               pip2=None,
                                                               beta2=None),
-                                            BaseCausalVariant(variant=Variant(chromosome=1,
+                                            BaseCausalVariant(rel=rel,
+                                                              variant=Variant(chromosome=1,
                                                                               position=1,
                                                                               reference='G',
                                                                               alternate='A'),
@@ -281,7 +385,7 @@ def test_colocalization_1():
                                             ], )
 
     sample = "\t".join(map(str, sample))
-    actual = Colocalization.from_str(sample)
+    actual = Colocalization.from_str(rel,sample)
     assert expected == actual
 
 # def test_colocalization_2():
