@@ -17,7 +17,7 @@ class CausalVariant(JSONifiable, Kwargs):
     pip2, beta2
 
     """
-    rel = attr.ib(validator=instance_of(str))
+    rel = attr.ib(validator=instance_of(int))
     
     pip1 = attr.ib(validator=attr.validators.optional(instance_of(float)))
     beta1 = attr.ib(validator=attr.validators.optional(instance_of(float)))
@@ -222,7 +222,7 @@ class Colocalization(Kwargs, JSONifiable):
     how data is loaded.
 
     """
-    rel = attr.ib(validator=instance_of(str))
+    rel = attr.ib(validator=instance_of(int))
     
     source1 = attr.ib(validator=instance_of(str))
     source2 = attr.ib(validator=instance_of(str))
