@@ -64,12 +64,15 @@ class CausalVariant(JSONifiable, Kwargs):
 
         :return: json
         """
-        d = self.__dict__
-        d = d.copy()
-
-        d.pop("_sa_instance_state", None)
+        d = {}
+        d["rel"] = self.rel
+        d["pip1"] = self.pip1
+        d["beta1"] = self.beta1
+        d["pip2"] = self.pip2
+        d["beta2"] = self.beta2
+        d["causal_variant_id"] = self.causal_variant_id
         d["position"] = self.variant.position if self.variant else None
-        d["variant"] = str(d["variant"]) if self.variant else None
+        d["variant"] = str(self.variant) if self.variant else None
         d["count_cs"] = self.count_cs()
         d["membership_cs"] = self.membership_cs()
         return d
