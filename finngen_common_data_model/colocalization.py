@@ -20,10 +20,10 @@ class CausalVariant(JSONifiable, Kwargs):
     rel = attr.ib(validator=instance_of(int))
     
     pip1 = attr.ib(validator=attr.validators.optional(instance_of(float)))
-    beta1 = attr.ib(validator=attr.validators.optional(instance_of(float)))
+    beta1 = attr.ib(validator=attr.validators.optional(instance_of(float))) # NA
 
-    pip2 = attr.ib(validator=attr.validators.optional(instance_of(float)))
-    beta2 = attr.ib(validator=attr.validators.optional(instance_of(float)))
+    pip2 = attr.ib(validator=attr.validators.optional(instance_of(float))) 
+    beta2 = attr.ib(validator=attr.validators.optional(instance_of(float))) # NA
 
     causal_variant_id = attr.ib(validator=attr.validators.optional(instance_of(int)), default=None)
 
@@ -231,10 +231,10 @@ class Colocalization(Kwargs, JSONifiable):
     source2 = attr.ib(validator=instance_of(str))
 
     phenotype1 = attr.ib(validator=instance_of(str))
-    phenotype1_description = attr.ib(validator=instance_of(str))
+    phenotype1_description = attr.ib(validator=attr.validators.optional(instance_of(str)))
 
     phenotype2 = attr.ib(validator=instance_of(str))
-    phenotype2_description = attr.ib(validator=instance_of(str))
+    phenotype2_description = attr.ib(validator=attr.validators.optional(instance_of(str)))
 
     quant1 = attr.ib(validator=attr.validators.optional(instance_of(str)))
     quant2 = attr.ib(validator=attr.validators.optional(instance_of(str)))
@@ -350,21 +350,21 @@ class Colocalization(Kwargs, JSONifiable):
                                         source2=nvl(line[1], str),
 
                                         phenotype1=nvl(line[2], only_ascii),
-                                        phenotype1_description=nvl(line[3], only_ascii),
+                                        phenotype1_description=nvl(line[3], na(only_ascii)),
 
                                         phenotype2=nvl(line[4], only_ascii),
-                                        phenotype2_description=nvl(line[5], only_ascii),
+                                        phenotype2_description=nvl(line[5], na(only_ascii)),
 
-                                        quant1=nvl(line[6], str),
-                                        quant2=nvl(line[7], str),
+                                        quant1=nvl(line[6], na(str)),
+                                        quant2=nvl(line[7], na(str)),
 
-                                        tissue1=nvl(line[8], str),
-                                        tissue2=nvl(line[9], str),
+                                        tissue1=nvl(line[8], na(str)),
+                                        tissue2=nvl(line[9], na(str)),
 
                                         locus_id1=nvl(line[10], Variant.from_str),
                                         locus_id2=nvl(line[11], Variant.from_str),
 
-                                        locus=Locus(nvl(line[12], string_to_chromosome),  # chromosome
+                                        locus=Locus(nvl(line[12], string_to_chromosome),
                                                     nvl(line[13], na(int)),  # start
                                                     nvl(line[14], na(int))),  # stop
 
@@ -393,8 +393,8 @@ class Colocalization(Kwargs, JSONifiable):
                 Column('{}colocalization_id'.format(prefix), Integer, primary_key=True, autoincrement=False),
                 Column('{}source1'.format(prefix), String(80), unique=False, nullable=False),
                 Column('{}source2'.format(prefix), String(80), unique=False, nullable=False),
-                Column('{}phenotype1'.format(prefix), String(1000), unique=False, nullable=False),
-                Column('{}phenotype1_description'.format(prefix), String(1000), unique=False, nullable=False),
+                Column('{}phenotype1'.format(prefix), String(1000), unique=False, nullable=True),
+                Column('{}phenotype1_description'.format(prefix), String(1000), unique=False, nullable=True),
                 Column('{}phenotype2'.format(prefix), String(1000), unique=False, nullable=False),
                 Column('{}phenotype2_description'.format(prefix), String(1000), unique=False, nullable=False),
 
