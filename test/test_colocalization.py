@@ -5,7 +5,7 @@ from finngen_common_data_model.colocalization import Colocalization as BaseColoc
     CausalVariant as BaseCausalVariant
 from finngen_common_data_model.genomics import Locus, Variant
 
-rel = str(uuid.uuid4())
+rel = 123
 
 @attr.s(frozen=True, slots=True)
 class Colocalization(BaseColocalization):
@@ -23,10 +23,10 @@ def test_parse_causal_variant():
     assert expected == actual
 
 
-causal_variants = [CausalVariant("rel-a",0.1, 0.11, 0.2, 0.22, None, Variant.from_str("1_1_A_G")),
-                   CausalVariant("rel-a",0.1, 0.11, None, None, None, Variant.from_str("1_1_A_G")),
-                   CausalVariant("rel-a",None, None, 0.2, 0.22, None, Variant.from_str("1_1_A_G")),
-                   CausalVariant("rel-a",None, None, None, None, None, Variant.from_str("1_1_A_G"))]
+causal_variants = [CausalVariant(1,0.1, 0.11, 0.2, 0.22, None, Variant.from_str("1_1_A_G")),
+                   CausalVariant(2,0.1, 0.11, None, None, None, Variant.from_str("1_1_A_G")),
+                   CausalVariant(3,None, None, 0.2, 0.22, None, Variant.from_str("1_1_A_G")),
+                   CausalVariant(4,None, None, None, None, None, Variant.from_str("1_1_A_G"))]
 
 
 def test_has_cs1():
@@ -67,13 +67,13 @@ def test_membership_cs():
 
 def test_causal_variants_kwargs_rep():
     actual = list(map(lambda c: c.kwargs_rep(), causal_variants))
-    expected = [{ 'rel': 'rel-a', 'beta1': 0.11, 'beta2': 0.22, 'pip1': 0.1, 'pip2': 0.2,
+    expected = [{ 'rel': 1, 'beta1': 0.11, 'beta2': 0.22, 'pip1': 0.1, 'pip2': 0.2,
                  'variant': Variant(chromosome=1, position=1, reference='A', alternate='G'), 'causal_variant_id': None},
-                { 'rel': 'rel-a', 'beta1': 0.11, 'beta2': None, 'pip1': 0.1, 'pip2': None,
+                { 'rel': 2, 'beta1': 0.11, 'beta2': None, 'pip1': 0.1, 'pip2': None,
                  'variant': Variant(chromosome=1, position=1, reference='A', alternate='G'), 'causal_variant_id': None},
-                { 'rel': 'rel-a', 'beta1': None, 'beta2': 0.22, 'pip1': None, 'pip2': 0.2,
+                { 'rel': 3, 'beta1': None, 'beta2': 0.22, 'pip1': None, 'pip2': 0.2,
                  'variant': Variant(chromosome=1, position=1, reference='A', alternate='G'), 'causal_variant_id': None},
-                { 'rel': 'rel-a', 'beta1': None, 'beta2': None, 'pip1': None, 'pip2': None,
+                { 'rel': 4, 'beta1': None, 'beta2': None, 'pip1': None, 'pip2': None,
                  'variant': Variant(chromosome=1, position=1, reference='A', alternate='G'), 'causal_variant_id': None}]
     assert expected == actual
 
@@ -81,13 +81,13 @@ def test_causal_variants_kwargs_rep():
 def test_json_rep():
     actual = list(map(lambda c: c.json_rep(), causal_variants))
     expected = [
-        { 'rel': 'rel-a', 'beta1': 0.11, 'beta2': 0.22, 'count_cs': 2, 'membership_cs': 'Both', 'pip1': 0.1, 'pip2': 0.2, 'position': 1,
+        { 'rel': 1, 'beta1': 0.11, 'beta2': 0.22, 'count_cs': 2, 'membership_cs': 'Both', 'pip1': 0.1, 'pip2': 0.2, 'position': 1,
          'variant': '1:1:A:G', 'causal_variant_id': None},
-        { 'rel': 'rel-a', 'beta1': 0.11, 'beta2': None, 'count_cs': 1, 'membership_cs': 'CS1', 'pip1': 0.1, 'pip2': None, 'position': 1,
+        { 'rel': 2, 'beta1': 0.11, 'beta2': None, 'count_cs': 1, 'membership_cs': 'CS1', 'pip1': 0.1, 'pip2': None, 'position': 1,
          'variant': '1:1:A:G', 'causal_variant_id': None},
-        { 'rel': 'rel-a', 'beta1': None, 'beta2': 0.22, 'count_cs': 1, 'membership_cs': 'CS2', 'pip1': None, 'pip2': 0.2, 'position': 1,
+        { 'rel': 3, 'beta1': None, 'beta2': 0.22, 'count_cs': 1, 'membership_cs': 'CS2', 'pip1': None, 'pip2': 0.2, 'position': 1,
          'variant': '1:1:A:G', 'causal_variant_id': None},
-        { 'rel': 'rel-a', 'beta1': None, 'beta2': None, 'count_cs': 0, 'membership_cs': 'None', 'pip1': None, 'pip2': None,
+        { 'rel': 4, 'beta1': None, 'beta2': None, 'count_cs': 0, 'membership_cs': 'None', 'pip1': None, 'pip2': None,
          'position': 1, 'variant': '1:1:A:G', 'causal_variant_id': None}]
     assert expected == actual
 

@@ -114,3 +114,8 @@ def test_order_key():
     actual = sorted(list(acutal), key=Variant.sort_key)
     expected = list(map(Variant.from_str, ["1:2:A:A", "1:2:A:G", "3:4:C:A", "3:4:C:G", "10:20:A:G"]))
     assert expected == actual
+
+def test_normalize_str():
+    acutal = list(map(Variant.normalize_str, ["1:2-A-G", "10:20/A/G", "3:4:C:A", "3:4:C:G", "1:2:A:A"]))
+    expected = ["1:2:A:G", "10:20:A:G", "3:4:C:A", "3:4:C:G", "1:2:A:A"]
+    assert acutal == expected

@@ -45,20 +45,25 @@ class Variant(JSONifiable, Kwargs):
                                               11 | 12 | 13 | 14 | 15 |16 | 17 | 18 | 19 | 20 |
                                               21 | 22 | 23 | 24 | 25))
 
-                             (?P<separator>[_:/])
+                             [_:/-]
 
                              (?P<position>\d+)
 
-                             (?P=separator)
+                             [_:/-]
 
                              (?P<reference>( \<[^\>]{1,998}\>
                                            | [ATGC]{1,1000} ))
 
-                             [_:/]
+                             [_:/-]
 
                              (?P<alternate>( \<[^\>]{1,998}\>
                                            | [ATGC]{1,1000} ))$
                         ''', re.VERBOSE)
+
+    @staticmethod
+    def normalize_str(text: str) -> str:
+        return str(Variant.from_str(text))
+    
 
     @staticmethod
     def from_str(text: str) -> typing.Optional["Variant"]:
