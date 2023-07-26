@@ -393,9 +393,9 @@ class Colocalization(Kwargs, JSONifiable):
                 Column('{}colocalization_id'.format(prefix), Integer, primary_key=True, autoincrement=False),
                 Column('{}source1'.format(prefix), String(80), unique=False, nullable=False),
                 Column('{}source2'.format(prefix), String(80), unique=False, nullable=False),
-                Column('{}phenotype1'.format(prefix), String(1000), unique=False, nullable=False),
+                Column('{}phenotype1'.format(prefix), String(500), unique=False, nullable=False),
                 Column('{}phenotype1_description'.format(prefix), String(1000), unique=False, nullable=False),
-                Column('{}phenotype2'.format(prefix), String(1000), unique=False, nullable=False),
+                Column('{}phenotype2'.format(prefix), String(500), unique=False, nullable=False),
                 Column('{}phenotype2_description'.format(prefix), String(1000), unique=False, nullable=False),
 
                 Column('{}quant1'.format(prefix), String(80), unique=False, nullable=True),
