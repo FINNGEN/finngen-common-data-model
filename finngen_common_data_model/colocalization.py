@@ -259,6 +259,8 @@ class Colocalization(Kwargs, JSONifiable):
 
     colocalization_id = attr.ib(validator=attr.validators.optional(instance_of(int)), default=None)
 
+    source2_displayname = attr.ib(validator=instance_of(str))
+
     _IMPORT_COLUMN_NAMES = ('source1',
                             'source2',
                             'pheno1',
@@ -281,7 +283,8 @@ class Colocalization(Kwargs, JSONifiable):
                             'len_cs2',
                             'len_inter',
                             'vars1_info',
-                            'vars2_info')
+                            'vars2_info',
+                            'source2_displayname')
 
     @staticmethod
     def cvs_column_names() -> typing.List[str]:
@@ -302,7 +305,7 @@ class Colocalization(Kwargs, JSONifiable):
                                                     "locus_id1", "locus_id2",
                                                     "locus",
                                                     "clpp", "clpa",
-                                                    "len_cs1", "len_cs2", "len_inter",
+                                                    "len_cs1", "len_cs2", "len_inter", 
                                                     "colocalization_id"]}
         c["variants"] = list(map(lambda v: CausalVariant(**v.kwargs_rep()), self.variants))
         return c
@@ -334,7 +337,7 @@ class Colocalization(Kwargs, JSONifiable):
         06..10 phenotype2_description, tissue1, tissue2, locus_id1, locus_id2
         11..15 chromosome, start, stop, clpp, clpa
         16..20 beta_id1, beta_id2, variation, vars_pip1, vars_pip2
-        21..25 vars_beta1, vars_beta2, len_cs1, len_cs2, len_inter
+        21..26 vars_beta1, vars_beta2, len_cs1, len_cs2, len_inter, source2_displayname
 
         :param colocalization_id: colocalization id
         :param line: string array with value
@@ -374,6 +377,8 @@ class Colocalization(Kwargs, JSONifiable):
                                         len_cs1=nvl(line[18], na(int)),
                                         len_cs2=nvl(line[19], na(int)),
                                         len_inter=nvl(line[20], na(int)),
+
+                                        source2_displayname=nvl(line[23], str),
 
                                         variants=variants,
 
@@ -417,4 +422,7 @@ class Colocalization(Kwargs, JSONifiable):
 
                 Column('{}len_cs1'.format(prefix), Integer, unique=False, nullable=False),
                 Column('{}len_cs2'.format(prefix), Integer, unique=False, nullable=False),
-                Column('{}len_inter'.format(prefix), Integer, unique=False, nullable=False)]
+                Column('{}len_inter'.format(prefix), Integer, unique=False, nullable=False),
+
+                Column('{}source2_displayname'.format(prefix), String(1000), unique=False, nullable=False)]
+    
