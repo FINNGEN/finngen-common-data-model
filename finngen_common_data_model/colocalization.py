@@ -254,12 +254,12 @@ class Colocalization(Kwargs, JSONifiable):
     len_cs2 = attr.ib(validator=instance_of(int))
     len_inter = attr.ib(validator=instance_of(int))
 
+    source2_displayname = attr.ib(validator=instance_of(str))
+
     variants = attr.ib(validator=attr.validators.deep_iterable(member_validator=instance_of(CausalVariant),
                                                                iterable_validator=instance_of(typing.List)))
 
     colocalization_id = attr.ib(validator=attr.validators.optional(instance_of(int)), default=None)
-
-    source2_displayname = attr.ib(validator=instance_of(str))
 
     _IMPORT_COLUMN_NAMES = ('source1',
                             'source2',
@@ -424,5 +424,5 @@ class Colocalization(Kwargs, JSONifiable):
                 Column('{}len_cs2'.format(prefix), Integer, unique=False, nullable=False),
                 Column('{}len_inter'.format(prefix), Integer, unique=False, nullable=False),
 
-                Column('{}source2_displayname'.format(prefix), String(1000), unique=False, nullable=False)]
+                Column('{}source2_displayname'.format(prefix), String(1000), unique=False, nullable=True)]
     
